@@ -264,7 +264,17 @@ namespace libsecondlife
                 properties.AboutText = Helpers.FieldToUTF8String(reply.PropertiesData.AboutText);
                 properties.FirstLifeText = Helpers.FieldToUTF8String(reply.PropertiesData.FLAboutText);
                 properties.BornOn = Helpers.FieldToUTF8String(reply.PropertiesData.BornOn);
-                properties.CharterMember = Helpers.FieldToUTF8String(reply.PropertiesData.CharterMember);
+                //properties.CharterMember = Helpers.FieldToUTF8String(reply.PropertiesData.CharterMember);
+                uint charter = Helpers.BytesToUInt(reply.PropertiesData.CharterMember);
+                if ( charter == 0 ) {
+                    properties.CharterMember = "Resident";
+                } else if ( charter == 2 ) {
+                    properties.CharterMember = "Charter";
+                } else if ( charter == 3 ) {
+                    properties.CharterMember = "Linden";
+                } else {
+                    properties.CharterMember = Helpers.FieldToUTF8String(reply.PropertiesData.CharterMember);
+                }
                 properties.Flags = (Avatar.ProfileFlags)reply.PropertiesData.Flags;
                 properties.ProfileURL = Helpers.FieldToUTF8String(reply.PropertiesData.ProfileURL);
 
