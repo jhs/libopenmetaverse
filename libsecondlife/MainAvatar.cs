@@ -567,7 +567,7 @@ namespace libsecondlife
         /// <param name="objectName">Name of the object containing the script</param>
         /// <param name="objectOwner">Name of the object's owner</param>
         /// <param name="questions">Bitwise value representing the requested permissions</param>
-        public delegate void ScriptQuestionCallback(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions);
+        public delegate void ScriptQuestionCallback(Simulator simulator, LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions);
 
         /// <summary>
         /// Triggered when the L$ account balance for this avatar changes
@@ -2182,7 +2182,8 @@ namespace libsecondlife
 
                 try
                 {
-                    OnScriptQuestion(question.Data.TaskID,
+                    OnScriptQuestion(simulator,
+                        question.Data.TaskID,
                         question.Data.ItemID,
                         Helpers.FieldToUTF8String(question.Data.ObjectName),
                         Helpers.FieldToUTF8String(question.Data.ObjectOwner),
