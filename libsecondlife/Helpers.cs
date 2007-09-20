@@ -443,6 +443,17 @@ namespace libsecondlife
         }
 
         /// <summary>
+        /// Convert an IP address object to an unsigned 32-bit integer
+        /// </summary>
+        /// <param name="address">IP address to convert</param>
+        /// <returns>32-bit unsigned integer holding the IP address bits</returns>
+        public static uint IPToUInt(System.Net.IPAddress address)
+        {
+            byte[] bytes = address.GetAddressBytes();
+            return (uint)((bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0]);
+        }
+
+        /// <summary>
         /// Clamp a given value between a range
         /// </summary>
         /// <param name="val">Value to clamp</param>

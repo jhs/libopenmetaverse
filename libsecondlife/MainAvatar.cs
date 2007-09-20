@@ -1269,7 +1269,7 @@ namespace libsecondlife
 		/// </summary>
 		public bool GoHome()
 		{
-			return Teleport(new LLUUID());
+			return Teleport(LLUUID.Zero);
 		}
 		/// <summary>
         /// Follows a call to RequestSit() to actually sit on the object
@@ -1290,9 +1290,9 @@ namespace libsecondlife
             if (Client.Settings.SEND_AGENT_UPDATES)
             {
                 Client.Self.Status.SitOnGround = true;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 Client.Self.Status.SitOnGround = false;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 return true;
             }
             else
@@ -1311,7 +1311,7 @@ namespace libsecondlife
             if (Client.Settings.SEND_AGENT_UPDATES)
             {
                 Client.Self.Status.UpNeg = true;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 return true;
             }
             else
@@ -1329,7 +1329,7 @@ namespace libsecondlife
             if (Client.Settings.SEND_AGENT_UPDATES)
             {
                 Client.Self.Status.UpNeg = false;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 return true;
             }
             else
@@ -1347,7 +1347,7 @@ namespace libsecondlife
             if (Client.Settings.SEND_AGENT_UPDATES)
             {
                 Client.Self.Status.UpPos = true;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 return true;
             }
             else
@@ -1366,9 +1366,9 @@ namespace libsecondlife
             {
                 Client.Self.Status.UpPos = false;
                 Client.Self.Status.FinishAnim = true;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 Client.Self.Status.FinishAnim = false;
-                Client.Self.Status.SendUpdate();
+                Client.Self.Status.SendUpdate(true);
                 return true;
             }
             else

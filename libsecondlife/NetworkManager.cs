@@ -769,7 +769,7 @@ namespace libsecondlife
                     {
                         try
                         {
-                            OnDisconnected(DisconnectType.NetworkTimeout, "");
+                            OnDisconnected(DisconnectType.NetworkTimeout, String.Empty);
                         }
                         catch (Exception e)
                         {
@@ -1069,14 +1069,15 @@ namespace libsecondlife
         {
             string message = Helpers.FieldToUTF8String(((KickUserPacket)packet).UserInfo.Reason);
 
-            // Shutdown the network layer
-            Shutdown(DisconnectType.ServerInitiated);
-
+            // Fire the callback to let client apps know we are shutting down
             if (OnDisconnected != null)
             {
                 try { OnDisconnected(DisconnectType.ServerInitiated, message); }
                 catch (Exception e) { Client.Log(e.ToString(), Helpers.LogLevel.Error); }
             }
+
+            // Shutdown the network layer
+            Shutdown(DisconnectType.ServerInitiated);
         }
 
         #endregion Packet Callbacks
