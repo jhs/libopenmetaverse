@@ -31,6 +31,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Text;
+using System.Reflection;
 using libsecondlife.Packets;
 
 namespace libsecondlife
@@ -419,6 +420,17 @@ namespace libsecondlife
         public InstantMessageOnline Offline;
         /// <summary>Context specific packed data</summary>
         public byte[] BinaryBucket;
+		//Print the contents of a message
+		public override string ToString(){
+			string result="";
+			Type imType = this.GetType();
+			FieldInfo[] fields = imType.GetFields(); 
+			foreach (FieldInfo field in fields){
+				result += (field.Name + " = " + field.GetValue(this) ); 
+			}
+			return result;
+
+		}
 	}
 	
 	#endregion Structs
