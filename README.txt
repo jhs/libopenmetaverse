@@ -93,7 +93,7 @@ Linux
 Software Needed
 ---------------
 
-mono - http://www.mono-project.com/
+mono 1.2.5 - http://www.mono-project.com/
 nAnt (0.85) - http://nant.sourceforge.net/
 nUnit Framework (2.2.8 or greater) - http://www.nunit.org/
 
