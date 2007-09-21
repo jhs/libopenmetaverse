@@ -104,7 +104,9 @@ namespace libsecondlife
             /// <summary></summary>
             AllowParcelChanges = 1 << 26,
             /// <summary></summary>
-            AbuseEmailToEstateOwner = 1 << 27
+            AbuseEmailToEstateOwner = 1 << 27,
+            /// <summary>Region is Voice Enabled</summary>
+            AllowVoice = 1 << 28
         }
 
         /// <summary>

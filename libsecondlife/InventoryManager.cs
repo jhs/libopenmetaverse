@@ -263,11 +263,20 @@ namespace libsecondlife
         /// <param name="position"></param>
         /// <param name="timestamp"></param>
         /// <param name="type"></param>
-        /// <param name="objectID"></param>
+        /// <param name="objectID">Will be null if offered from a primitive</param>
         /// <param name="fromTask"></param>
         /// <returns>True to accept the inventory offer, false to reject it</returns>
-        public delegate bool ObjectReceivedCallback(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, 
-            LLUUID regionID, LLVector3 position, DateTime timestamp, AssetType type, LLUUID objectID, bool fromTask);
+        public delegate bool ObjectReceivedCallback(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, AssetType type, LLUUID objectID, bool fromTask);
+    /// <summary>
+    /// Callback when an inventory object is accepted and received from a task
+    /// </summary>
+    /// <param name="ItemID"></param>
+    /// <param name="FolderID"></param>
+    /// <param name="CreatorID"></param>
+    /// <param name="AssetID"></param>
+    public delegate void TaskInventoryItemReceivedCallback(LLUUID ItemID, LLUUID FolderID, LLUUID CreatorID, LLUUID AssetID, InventoryType Type);
+
+        public event TaskInventoryItemReceivedCallback OnTaskInventoryItemReceived;
 
         public event FolderUpdatedCallback OnInventoryFolderUpdated;
         public event ObjectReceivedCallback OnInventoryObjectReceived;
@@ -1058,7 +1067,7 @@ namespace libsecondlife
         /// <param name="item">InventoryObject object containing item details</param>
         public LLUUID RezFromInventory(Simulator simulator, LLQuaternion rotation, LLVector3 position, InventoryObject item)
         {
-            return RezFromInventory(simulator, rotation, position, item, _Client.Self.ActiveGroup, LLUUID.Random());
+            return RezFromInventory(simulator, rotation, position, item, _Client.Self.ActiveGroup, LLUUID.Random(), false);
         }
 
         /// <summary>
@@ -1072,7 +1081,7 @@ namespace libsecondlife
         public LLUUID RezFromInventory(Simulator simulator, LLQuaternion rotation, LLVector3 position, InventoryObject item,
             LLUUID groupOwner)
         {
-            return RezFromInventory(simulator, rotation, position, item, groupOwner, LLUUID.Random());
+            return RezFromInventory(simulator, rotation, position, item, groupOwner, LLUUID.Random(), false);
         }
 
         /// <summary>
@@ -1084,8 +1093,9 @@ namespace libsecondlife
         /// <param name="item">InventoryObject object containing item details</param>
         /// <param name="groupOwner">LLUUID of group to own the object.</param>        
         /// <param name="queryID">User defined queryID to correlate replies.</param>
+        /// <param name="requestObjectDetails">if set to true the simulator will automatically send object detail packet(s) back to the client.</param>
         public LLUUID RezFromInventory(Simulator simulator, LLQuaternion rotation, LLVector3 position, InventoryObject item,
-            LLUUID groupOwner, LLUUID queryID)
+            LLUUID groupOwner, LLUUID queryID, bool requestObjectDetails)
         {
             RezObjectPacket add = new RezObjectPacket();
 
@@ -1099,7 +1109,7 @@ namespace libsecondlife
             add.RezData.RayEnd = position;
             add.RezData.RayTargetID = LLUUID.Zero;
             add.RezData.RayEndIsIntersection = false;
-            add.RezData.RezSelected = false;
+            add.RezData.RezSelected = requestObjectDetails;
             add.RezData.RemoveItem = false;
             add.RezData.ItemFlags = item.Flags;
             add.RezData.GroupMask = (uint)item.Permissions.GroupMask;
@@ -1362,7 +1372,9 @@ namespace libsecondlife
                             item.SaleType = (SaleType)reply.ItemData[i].SaleType;
                             item.OwnerID = reply.AgentData.OwnerID;
 
-                            _Store[item.UUID] = item;
+                            try {
+                                _Store[item.UUID] = item;
+                            } catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
                         }
                     }
                 }
@@ -1418,9 +1430,9 @@ namespace libsecondlife
                         dataBlock.OwnerMask);
                 item.SalePrice = dataBlock.SalePrice;
                 item.SaleType = (SaleType)dataBlock.SaleType;
-
-                _Store[item.UUID] = item;
-
+                try {
+                    _Store[item.UUID] = item;
+                } catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
                 ItemCreatedCallback callback;
                 if (_ItemCreatedCallbacks.TryGetValue(dataBlock.CallbackID, out callback))
                 {
@@ -1428,6 +1440,14 @@ namespace libsecondlife
 
                     try { callback(true, item); }
                     catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
+                    if (OnTaskInventoryItemReceived != null)
+                    { 
+                        try
+                        {
+                        OnTaskInventoryItemReceived(item.UUID, dataBlock.FolderID, item.CreatorID, item.AssetUUID, item.InventoryType);
+                        }
+                    catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
+                    }
                 }
             }
         }
@@ -1616,7 +1636,7 @@ namespace libsecondlife
                                 imp.MessageBlock.Dialog = (byte)InstantMessageDialog.InventoryAccepted;
                                 break;
                             case InstantMessageDialog.TaskInventoryOffered:
-                                imp.MessageBlock.Dialog = (byte)InstantMessageDialog.TaskInventoryOffered;
+                                imp.MessageBlock.Dialog = (byte)InstantMessageDialog.TaskInventoryAccepted;
                                 break;
                             case InstantMessageDialog.GroupNotice:
                                 imp.MessageBlock.Dialog = (byte)InstantMessageDialog.GroupNoticeInventoryAccepted;

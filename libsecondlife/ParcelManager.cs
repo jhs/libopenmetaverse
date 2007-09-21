@@ -151,6 +151,10 @@ namespace libsecondlife
             AllowAllObjectEntry = 1 << 27,
             /// <summary>Only allow group and owner objects to enter this parcel</summary>
             AllowGroupObjectEntry = 1 << 28,
+            /// <summary>Voice Enabled on this parcel</summary>
+            AllowVoiceChat = 1 << 29,
+            /// <summary>Use Estate Voice channel for Voice on this parcel</summary>
+            UseEstateVoiceChan = 1 << 30
         }
 
         /// <summary>

@@ -304,7 +304,18 @@ namespace libsecondlife
 
         internal string name = String.Empty;
         internal string groupName = String.Empty;
-        internal uint sittingOn = 0;
+        internal uint sittingOn
+        {
+            get
+            {
+                return ParentID;
+            }
+ 
+            set
+            {
+                ParentID = value;
+            }
+        }
 
 
         /// <summary>
