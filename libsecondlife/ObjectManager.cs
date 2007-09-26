@@ -152,7 +152,7 @@ namespace libsecondlife
         /// <param name="simulator">Simulator the packet was received from</param>
         /// <param name="sittingOn">The local ID of the object that is being sat
         /// on. If this is zero the avatar is not sitting on an object</param>
-        public delegate void AvatarSitChanged(Simulator simulator, uint sittingOn);
+        public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
 		
         #endregion
 
@@ -428,9 +428,8 @@ namespace libsecondlife
         /// </summary>
         public event ObjectUpdatedCallback OnObjectUpdated;
         /// <summary>
-        /// This event will be raised when the main avatar sits on an 
-        /// object or stands up, with a local ID of the current seat or
-        /// zero.
+        /// This event will be raised when an avatar sits on an object
+        /// or stands up, with a local ID of the current seat or zero.
         /// </summary>
         public event AvatarSitChanged OnAvatarSitChanged;
         /// <summary>
@@ -1556,22 +1555,13 @@ namespace libsecondlife
                             Client.Self.Rotation = rotation;
                             Client.Self.AngularVelocity = angularVelocity;
 
-                            // Detect if we are sitting or standing
-                            uint oldSittingOn = Client.Self.SittingOn;
-
-                            // Fire the callback for our sitting orientation changing
-                            if (block.ParentID != oldSittingOn)
-                            {
-                                SetAvatarSelfSittingOn(block.ParentID);
-                                FireOnAvatarSitChanged(simulator, Client.Self.SittingOn);
-                            }
-
                             #endregion
                         }
 
                         #region Create an Avatar from the decoded data
 
                         Avatar avatar = GetAvatar(simulator, block.ID, block.FullID);
+                        uint oldSeatID = avatar.sittingOn;
 
                         avatar.ID = block.FullID;
                         avatar.LocalID = block.ID;
@@ -1584,8 +1574,9 @@ namespace libsecondlife
                         avatar.NameValues = nameValues;
                         avatar.Data = data;
                         avatar.GenericData = block.Data;
+                        avatar.sittingOn = block.ParentID;
 
-                        SetAvatarSittingOn(avatar, block.ParentID);
+                        SetAvatarSittingOn(simulator, avatar, block.ParentID, oldSeatID);
 
                         // Set this avatar online and in a region
                         avatar.Online = true;
@@ -2221,14 +2212,17 @@ namespace libsecondlife
             return prim;
         }
 
-        protected void SetAvatarSelfSittingOn(uint localid)
+        protected void SetAvatarSittingOn(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
-            Client.Self.sittingOn = localid;
-        }
-
-        protected void SetAvatarSittingOn(Avatar av, uint localid)
-        {
+            if (localid == Client.Self.LocalID) Client.Self.sittingOn = localid;
             av.sittingOn = localid;
+                        
+
+            if (OnAvatarSitChanged != null && oldSeatID != localid)
+            {
+                try { OnAvatarSitChanged(sim, av, localid, oldSeatID); }
+                catch (Exception e) { Client.Log(e.ToString(), Helpers.LogLevel.Error); }
+            }
         }
 
 		protected void UpdateDilation(Simulator s, uint dilation)
@@ -2290,15 +2284,6 @@ namespace libsecondlife
             if (OnNewAttachment != null)
             {
                 try { OnNewAttachment(simulator, prim, RegionHandle, TimeDilation); }
-                catch (Exception e) { Client.Log(e.ToString(), Helpers.LogLevel.Error); }
-            }
-        }
-
-        protected void FireOnAvatarSitChanged(Simulator simulator, uint LocalID)
-        {
-            if (OnAvatarSitChanged != null)
-            {
-                try { OnAvatarSitChanged(simulator, Client.Self.sittingOn); }
                 catch (Exception e) { Client.Log(e.ToString(), Helpers.LogLevel.Error); }
             }
         }
