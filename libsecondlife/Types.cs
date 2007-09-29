@@ -582,9 +582,10 @@ namespace libsecondlife
         /// in arrow brackets and separated by commas</param>
         public static LLVector3 Parse(string val)
         {
+            IFormatProvider formatProvider = Helpers.EnUsCulture;
             char[] splitChar = { ',', ' ' };
             string[] split = val.Replace("<","").Replace(">","").Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
-            return new LLVector3(float.Parse(split[0].Trim()), float.Parse(split[1].Trim()), float.Parse(split[2].Trim()));
+            return new LLVector3(float.Parse( split[0].Trim(), formatProvider ), float.Parse(split[1].Trim(), formatProvider), float.Parse(split[2].Trim(), formatProvider));
         }
 
         public static bool TryParse(string val, out LLVector3 result)
@@ -635,7 +636,8 @@ namespace libsecondlife
         /// vector to string conversion in Second Life</returns>
         public override string ToString()
         {
-            return String.Format("<{0}, {1}, {2}>", X, Y, Z);
+            IFormatProvider formatProvider = Helpers.EnUsCulture;
+            return String.Format(formatProvider, "<{0}, {1}, {2}>", X, Y, Z);
         }
 
         #endregion Overrides

@@ -799,11 +799,10 @@ namespace libsecondlife
         /// containing 'type'. The folder is not necessarily only for that
         /// type
         /// </summary>
-        /// <remarks>This will create a new inventory folder on the fly if
-        /// one does not exist</remarks>
+        /// <remarks>This will return the root folder if one does not exist</remarks>
         /// <param name="type"></param>
-        /// <returns>The UUID of the desired or newly created folder, or
-        /// LLUUID.Zero on failure</returns>
+        /// <returns>The UUID of the desired folder if found, the UUID of the RootFolder
+        /// if not found, or LLUUID.Zero on failure</returns>
         public LLUUID FindFolderForType(AssetType type)
         {
             if (_Store == null) 
@@ -831,8 +830,8 @@ namespace libsecondlife
                 }
             }
 
-            // No match found, create one
-            return CreateFolder(_Store.RootFolder.UUID, type, String.Empty);
+            // No match found, return Root Folder ID
+            return _Store.RootFolder.UUID;
         }
 
         public LLUUID CreateFolder(LLUUID parentID, AssetType preferredType, string name)
@@ -1287,7 +1286,19 @@ namespace libsecondlife
                 }
             }
         }
-
+        private InventoryItem SafeCreateInventoryItem(InventoryType InvType, LLUUID ItemID)
+        {
+            InventoryItem ret = null;
+            if (_Store.Contains(ItemID))
+            {
+                ret = Store[ItemID] as InventoryItem;
+            }
+            if (ret == null)
+            {
+                ret = CreateInventoryItem(InvType, ItemID);
+            }
+            return ret;
+        }
         #endregion Private Helper Functions
 
         #region Callbacks
@@ -1440,14 +1451,14 @@ namespace libsecondlife
 
                     try { callback(true, item); }
                     catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
-                    if (OnTaskInventoryItemReceived != null)
-                    { 
-                        try
-                        {
+                }
+                if (OnTaskInventoryItemReceived != null)
+                { 
+                    try
+                    {
                         OnTaskInventoryItemReceived(item.UUID, dataBlock.FolderID, item.CreatorID, item.AssetUUID, item.InventoryType);
-                        }
-                    catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
                     }
+                    catch (Exception e) { _Client.Log(e.ToString(), Helpers.LogLevel.Error); }
                 }
             }
         }
@@ -1476,7 +1487,7 @@ namespace libsecondlife
                 foreach (BulkUpdateInventoryPacket.FolderDataBlock dataBlock in update.FolderData)
                 {
 
-                    if (_Store.Contains(dataBlock.FolderID))
+                    if (!_Store.Contains(dataBlock.FolderID))
                         _Client.Log("Received BulkUpdate for unknown folder: " + dataBlock.FolderID, Helpers.LogLevel.Warning);
 
                     InventoryFolder folder = new InventoryFolder(dataBlock.FolderID);
@@ -1494,9 +1505,7 @@ namespace libsecondlife
                     if (!_Store.Contains(dataBlock.ItemID))
                         _Client.Log("Received BulkUpdate for unknown item: " + dataBlock.ItemID, Helpers.LogLevel.Warning);
 
-                    // FIXME: Write a helper function that will either fetch an item out of the store or create it
-                    // and use that here instead, to prevent overwriting already fetched AssetIDs on an update
-                    InventoryItem item = CreateInventoryItem((InventoryType)dataBlock.InvType, dataBlock.ItemID);
+                    InventoryItem item = SafeCreateInventoryItem((InventoryType)dataBlock.InvType, dataBlock.ItemID);
 
                     item.AssetType = (AssetType)dataBlock.Type;
                     if (dataBlock.AssetID != LLUUID.Zero) item.AssetUUID = dataBlock.AssetID;
