@@ -26,27 +26,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 using System.Text;
 using libsecondlife.Packets;
 
 namespace libsecondlife
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public enum SaleType : byte
-    {
-        /// <summary></summary>
-        Not = 0,
-        /// <summary></summary>
-        Original = 1,
-        /// <summary></summary>
-        Copy = 2,
-        /// <summary></summary>
-        Contents = 3
-    }
-
     /// <summary>
     /// Contains the variables sent in an object update packet for objects. 
     /// Used to track position and movement of prims and avatars
@@ -506,7 +490,7 @@ namespace libsecondlife
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            InterpolationTimer = new System.Timers.Timer(Settings.INTERPOLATION_UPDATE);
+            InterpolationTimer = new System.Timers.Timer(Settings.INTERPOLATION_INTERVAL);
             InterpolationTimer.Elapsed += new System.Timers.ElapsedEventHandler(InterpolationTimer_Elapsed);
             InterpolationTimer.Start();
         }
@@ -523,8 +507,8 @@ namespace libsecondlife
         public void RequestObject(Simulator simulator, uint localID)
         {
             RequestMultipleObjectsPacket request = new RequestMultipleObjectsPacket();
-            request.AgentData.AgentID = Client.Network.AgentID;
-            request.AgentData.SessionID = Client.Network.SessionID;
+            request.AgentData.AgentID = Client.Self.AgentID;
+            request.AgentData.SessionID = Client.Self.SessionID;
             request.ObjectData = new RequestMultipleObjectsPacket.ObjectDataBlock[1];
             request.ObjectData[0] = new RequestMultipleObjectsPacket.ObjectDataBlock();
             request.ObjectData[0].ID = localID;
@@ -545,8 +529,8 @@ namespace libsecondlife
             int i = 0;
 
             RequestMultipleObjectsPacket request = new RequestMultipleObjectsPacket();
-            request.AgentData.AgentID = Client.Network.AgentID;
-            request.AgentData.SessionID = Client.Network.SessionID;
+            request.AgentData.AgentID = Client.Self.AgentID;
+            request.AgentData.SessionID = Client.Self.SessionID;
             request.ObjectData = new RequestMultipleObjectsPacket.ObjectDataBlock[localIDs.Count];
 
             foreach (uint localID in localIDs)
@@ -584,8 +568,8 @@ namespace libsecondlife
         {
             ObjectBuyPacket buy = new ObjectBuyPacket();
 
-            buy.AgentData.AgentID = Client.Network.AgentID;
-            buy.AgentData.SessionID = Client.Network.SessionID;
+            buy.AgentData.AgentID = Client.Self.AgentID;
+            buy.AgentData.SessionID = Client.Self.SessionID;
             buy.AgentData.GroupID = groupID;
             buy.AgentData.CategoryID = categoryID;
 
@@ -609,8 +593,8 @@ namespace libsecondlife
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
 
-            select.AgentData.AgentID = Client.Network.AgentID;
-            select.AgentData.SessionID = Client.Network.SessionID;
+            select.AgentData.AgentID = Client.Self.AgentID;
+            select.AgentData.SessionID = Client.Self.SessionID;
 
             select.ObjectData = new ObjectSelectPacket.ObjectDataBlock[1];
             select.ObjectData[0] = new ObjectSelectPacket.ObjectDataBlock();
@@ -629,8 +613,8 @@ namespace libsecondlife
         {
             ObjectSelectPacket select = new ObjectSelectPacket();
 
-            select.AgentData.AgentID = Client.Network.AgentID;
-            select.AgentData.SessionID = Client.Network.SessionID;
+            select.AgentData.AgentID = Client.Self.AgentID;
+            select.AgentData.SessionID = Client.Self.SessionID;
 
             select.ObjectData = new ObjectSelectPacket.ObjectDataBlock[localIDs.Length];
 
@@ -647,8 +631,8 @@ namespace libsecondlife
         {
             ObjectDeselectPacket deselect = new ObjectDeselectPacket();
 
-            deselect.AgentData.AgentID = Client.Network.AgentID;
-            deselect.AgentData.SessionID = Client.Network.SessionID;
+            deselect.AgentData.AgentID = Client.Self.AgentID;
+            deselect.AgentData.SessionID = Client.Self.SessionID;
 
             deselect.ObjectData = new ObjectDeselectPacket.ObjectDataBlock[1];
             deselect.ObjectData[0] = new ObjectDeselectPacket.ObjectDataBlock();
@@ -665,8 +649,8 @@ namespace libsecondlife
         public void ClickObject(Simulator simulator, uint localID)
         {
             ObjectGrabPacket grab = new ObjectGrabPacket();
-            grab.AgentData.AgentID = Client.Network.AgentID;
-            grab.AgentData.SessionID = Client.Network.SessionID;
+            grab.AgentData.AgentID = Client.Self.AgentID;
+            grab.AgentData.SessionID = Client.Self.SessionID;
             grab.ObjectData.GrabOffset = LLVector3.Zero;
             grab.ObjectData.LocalID = localID;
 
@@ -676,8 +660,8 @@ namespace libsecondlife
             // and we'll be grabbing the object
 
             ObjectDeGrabPacket degrab = new ObjectDeGrabPacket();
-            degrab.AgentData.AgentID = Client.Network.AgentID;
-            degrab.AgentData.SessionID = Client.Network.SessionID;
+            degrab.AgentData.AgentID = Client.Self.AgentID;
+            degrab.AgentData.SessionID = Client.Self.SessionID;
             degrab.ObjectData.LocalID = localID;
 
             Client.Network.SendPacket(degrab, simulator);
@@ -703,8 +687,8 @@ namespace libsecondlife
         {
             ObjectAddPacket packet = new ObjectAddPacket();
 
-            packet.AgentData.AgentID = Client.Network.AgentID;
-            packet.AgentData.SessionID = Client.Network.SessionID;
+            packet.AgentData.AgentID = Client.Self.AgentID;
+            packet.AgentData.SessionID = Client.Self.SessionID;
             packet.AgentData.GroupID = groupID;
 
             packet.ObjectData.State = (byte)prim.State;
@@ -759,8 +743,8 @@ namespace libsecondlife
         {
             ObjectAddPacket add = new ObjectAddPacket();
 
-            add.AgentData.AgentID = Client.Network.AgentID;
-            add.AgentData.SessionID = Client.Network.SessionID;
+            add.AgentData.AgentID = Client.Self.AgentID;
+            add.AgentData.SessionID = Client.Self.SessionID;
             add.AgentData.GroupID = groupOwner;
             add.ObjectData.BypassRaycast = 1;
             add.ObjectData.Material = 3;
@@ -790,8 +774,8 @@ namespace libsecondlife
         {
             ObjectAddPacket add = new ObjectAddPacket();
 
-            add.AgentData.AgentID = Client.Network.AgentID;
-            add.AgentData.SessionID = Client.Network.SessionID;
+            add.AgentData.AgentID = Client.Self.AgentID;
+            add.AgentData.SessionID = Client.Self.SessionID;
             add.AgentData.GroupID = groupOwner;
             add.ObjectData.BypassRaycast = 1;
             add.ObjectData.Material = 3;
@@ -829,8 +813,8 @@ namespace libsecondlife
         {
             ObjectImagePacket image = new ObjectImagePacket();
 
-            image.AgentData.AgentID = Client.Network.AgentID;
-            image.AgentData.SessionID = Client.Network.SessionID;
+            image.AgentData.AgentID = Client.Self.AgentID;
+            image.AgentData.SessionID = Client.Self.SessionID;
             image.ObjectData = new ObjectImagePacket.ObjectDataBlock[1];
             image.ObjectData[0] = new ObjectImagePacket.ObjectDataBlock();
             image.ObjectData[0].ObjectLocalID = localID;
@@ -850,8 +834,8 @@ namespace libsecondlife
         {
             ObjectExtraParamsPacket extra = new ObjectExtraParamsPacket();
 
-            extra.AgentData.AgentID = Client.Network.AgentID;
-            extra.AgentData.SessionID = Client.Network.SessionID;
+            extra.AgentData.AgentID = Client.Self.AgentID;
+            extra.AgentData.SessionID = Client.Self.SessionID;
             extra.ObjectData = new ObjectExtraParamsPacket.ObjectDataBlock[1];
             extra.ObjectData[0] = new ObjectExtraParamsPacket.ObjectDataBlock();
             extra.ObjectData[0].ObjectLocalID = localID;
@@ -873,8 +857,8 @@ namespace libsecondlife
         {
             ObjectExtraParamsPacket extra = new ObjectExtraParamsPacket();
 
-            extra.AgentData.AgentID = Client.Network.AgentID;
-            extra.AgentData.SessionID = Client.Network.SessionID;
+            extra.AgentData.AgentID = Client.Self.AgentID;
+            extra.AgentData.SessionID = Client.Self.SessionID;
             extra.ObjectData = new ObjectExtraParamsPacket.ObjectDataBlock[1];
             extra.ObjectData[0] = new ObjectExtraParamsPacket.ObjectDataBlock();
             extra.ObjectData[0].ObjectLocalID = localID;
@@ -890,8 +874,8 @@ namespace libsecondlife
         {
             ObjectExtraParamsPacket extra = new ObjectExtraParamsPacket();
 
-            extra.AgentData.AgentID = Client.Network.AgentID;
-            extra.AgentData.SessionID = Client.Network.SessionID;
+            extra.AgentData.AgentID = Client.Self.AgentID;
+            extra.AgentData.SessionID = Client.Self.SessionID;
 
             extra.ObjectData = new ObjectExtraParamsPacket.ObjectDataBlock[1];
             extra.ObjectData[0] = new ObjectExtraParamsPacket.ObjectDataBlock();
@@ -906,8 +890,8 @@ namespace libsecondlife
             // Not sure why, but if you don't send this the sculpted prim disappears
             ObjectShapePacket shape = new ObjectShapePacket();
 
-            shape.AgentData.AgentID = Client.Network.AgentID;
-            shape.AgentData.SessionID = Client.Network.SessionID;
+            shape.AgentData.AgentID = Client.Self.AgentID;
+            shape.AgentData.SessionID = Client.Self.SessionID;
 
             shape.ObjectData = new libsecondlife.Packets.ObjectShapePacket.ObjectDataBlock[1];
             shape.ObjectData[0] = new libsecondlife.Packets.ObjectShapePacket.ObjectDataBlock();
@@ -923,8 +907,8 @@ namespace libsecondlife
         {
             ObjectExtraParamsPacket extra = new ObjectExtraParamsPacket();
 
-            extra.AgentData.AgentID = Client.Network.AgentID;
-            extra.AgentData.SessionID = Client.Network.SessionID;
+            extra.AgentData.AgentID = Client.Self.AgentID;
+            extra.AgentData.SessionID = Client.Self.SessionID;
             extra.ObjectData = new ObjectExtraParamsPacket.ObjectDataBlock[1];
             extra.ObjectData[0] = new ObjectExtraParamsPacket.ObjectDataBlock();
             extra.ObjectData[0].ObjectLocalID = localID;
@@ -945,8 +929,8 @@ namespace libsecondlife
         {
             ObjectLinkPacket packet = new ObjectLinkPacket();
 
-            packet.AgentData.AgentID = Client.Network.AgentID;
-            packet.AgentData.SessionID = Client.Network.SessionID;
+            packet.AgentData.AgentID = Client.Self.AgentID;
+            packet.AgentData.SessionID = Client.Self.SessionID;
 
             packet.ObjectData = new ObjectLinkPacket.ObjectDataBlock[localIDs.Count];
 
@@ -971,8 +955,8 @@ namespace libsecondlife
         public void SetRotation(Simulator simulator, uint localID, LLQuaternion rotation)
         {
             ObjectRotationPacket objRotPacket = new ObjectRotationPacket();
-            objRotPacket.AgentData.AgentID = Client.Network.AgentID;
-            objRotPacket.AgentData.SessionID = Client.Network.SessionID;
+            objRotPacket.AgentData.AgentID = Client.Self.AgentID;
+            objRotPacket.AgentData.SessionID = Client.Self.SessionID;
 
             objRotPacket.ObjectData = new ObjectRotationPacket.ObjectDataBlock[1];
 
@@ -1002,8 +986,8 @@ namespace libsecondlife
         public void SetNames(Simulator simulator, uint[] localIDs, string[] names)
         {
             ObjectNamePacket namePacket = new ObjectNamePacket();
-            namePacket.AgentData.AgentID = Client.Network.AgentID;
-            namePacket.AgentData.SessionID = Client.Network.SessionID;
+            namePacket.AgentData.AgentID = Client.Self.AgentID;
+            namePacket.AgentData.SessionID = Client.Self.SessionID;
 
             namePacket.ObjectData = new ObjectNamePacket.ObjectDataBlock[localIDs.Length];
 
@@ -1037,8 +1021,8 @@ namespace libsecondlife
         public void SetDescriptions(Simulator simulator, uint[] localIDs, string[] descriptions)
         {
             ObjectDescriptionPacket descPacket = new ObjectDescriptionPacket();
-            descPacket.AgentData.AgentID = Client.Network.AgentID;
-            descPacket.AgentData.SessionID = Client.Network.SessionID;
+            descPacket.AgentData.AgentID = Client.Self.AgentID;
+            descPacket.AgentData.SessionID = Client.Self.SessionID;
 
             descPacket.ObjectData = new ObjectDescriptionPacket.ObjectDataBlock[localIDs.Length];
 
@@ -1062,8 +1046,8 @@ namespace libsecondlife
         public void AttachObject(Simulator simulator, uint localID, AttachmentPoint attachPoint, LLQuaternion rotation)
         {
             ObjectAttachPacket attach = new ObjectAttachPacket();
-            attach.AgentData.AgentID = Client.Network.AgentID;
-            attach.AgentData.SessionID = Client.Network.SessionID;
+            attach.AgentData.AgentID = Client.Self.AgentID;
+            attach.AgentData.SessionID = Client.Self.SessionID;
             attach.AgentData.AttachmentPoint = (byte)attachPoint;
 
             attach.ObjectData = new ObjectAttachPacket.ObjectDataBlock[1];
@@ -1082,8 +1066,8 @@ namespace libsecondlife
         public void DetachObjects(Simulator simulator, List<uint> localIDs)
         {
             ObjectDetachPacket detach = new ObjectDetachPacket();
-            detach.AgentData.AgentID = Client.Network.AgentID;
-            detach.AgentData.SessionID = Client.Network.SessionID;
+            detach.AgentData.AgentID = Client.Self.AgentID;
+            detach.AgentData.SessionID = Client.Self.SessionID;
             detach.ObjectData = new ObjectDetachPacket.ObjectDataBlock[localIDs.Count];
 
             int i = 0;
@@ -1106,8 +1090,8 @@ namespace libsecondlife
         public void SetPosition(Simulator simulator, uint localID, LLVector3 position)
         {
             ObjectPositionPacket objPosPacket = new ObjectPositionPacket();
-            objPosPacket.AgentData.AgentID = Client.Self.ID;
-            objPosPacket.AgentData.SessionID = Client.Network.SessionID;
+            objPosPacket.AgentData.AgentID = Client.Self.AgentID;
+            objPosPacket.AgentData.SessionID = Client.Self.SessionID;
 
             objPosPacket.ObjectData = new ObjectPositionPacket.ObjectDataBlock[1];
 
@@ -1128,8 +1112,8 @@ namespace libsecondlife
         public void DeedObject(Simulator simulator, uint localID, LLUUID group)
         {
             ObjectOwnerPacket objDeedPacket = new ObjectOwnerPacket();
-            objDeedPacket.AgentData.AgentID = Client.Self.ID;
-            objDeedPacket.AgentData.SessionID = Client.Network.SessionID;
+            objDeedPacket.AgentData.AgentID = Client.Self.AgentID;
+            objDeedPacket.AgentData.SessionID = Client.Self.SessionID;
 
             // Can only be use in God mode
             objDeedPacket.HeaderData.Override = false;
@@ -1154,8 +1138,8 @@ namespace libsecondlife
         public void DeedObjects(Simulator simulator, List<uint> localIDs, LLUUID group)
         {
             ObjectOwnerPacket packet = new ObjectOwnerPacket();
-            packet.AgentData.AgentID = Client.Self.ID;
-            packet.AgentData.SessionID = Client.Network.SessionID;
+            packet.AgentData.AgentID = Client.Self.AgentID;
+            packet.AgentData.SessionID = Client.Self.SessionID;
 
             // Can only be use in God mode
             packet.HeaderData.Override = false;
@@ -1185,8 +1169,8 @@ namespace libsecondlife
         {
             ObjectPermissionsPacket packet = new ObjectPermissionsPacket();
 
-            packet.AgentData.AgentID = Client.Network.AgentID;
-            packet.AgentData.SessionID = Client.Network.SessionID;
+            packet.AgentData.AgentID = Client.Self.AgentID;
+            packet.AgentData.SessionID = Client.Self.SessionID;
 
             // Override can only be used by gods
             packet.HeaderData.Override = false;
@@ -1225,8 +1209,8 @@ namespace libsecondlife
         public void RequestObjectPropertiesFamily(Simulator simulator, LLUUID objectID, bool reliable)
         {
             RequestObjectPropertiesFamilyPacket properties = new RequestObjectPropertiesFamilyPacket();
-            properties.AgentData.AgentID = Client.Network.AgentID;
-            properties.AgentData.SessionID = Client.Network.SessionID;
+            properties.AgentData.AgentID = Client.Self.AgentID;
+            properties.AgentData.SessionID = Client.Self.SessionID;
             properties.ObjectData.ObjectID = objectID;
             // TODO: RequestFlags is typically only for bug report submissions, but we might be able to
             // use it to pass an arbitrary uint back to the callback
@@ -1282,7 +1266,7 @@ namespace libsecondlife
                             break;
                         case PCode.Avatar:
                             // Make an exception for updates about our own agent
-                            if (block.FullID != Client.Network.AgentID && OnNewAvatar == null) continue;
+                            if (block.FullID != Client.Self.AgentID && OnNewAvatar == null) continue;
                             break;
                         case PCode.ParticleSystem:
                             continue; // TODO: Do something with these
@@ -1296,12 +1280,12 @@ namespace libsecondlife
                 string nameValue = Helpers.FieldToUTF8String(block.NameValue);
                 if (nameValue.Length > 0)
                 {
-                    string[] lines = nameValue.Split(new char[] { '\n' });
+                    string[] lines = nameValue.Split('\n');
                     nameValues = new NameValue[lines.Length];
 
                     for (int i = 0; i < lines.Length; i++)
                     {
-                        if (lines[i].Length > 0)
+                        if (!String.IsNullOrEmpty(lines[i]))
                         {
                             NameValue nv = new NameValue(lines[i]);
                             if (nv.Name == "AttachItemID") attachment = true;
@@ -1320,8 +1304,8 @@ namespace libsecondlife
                 LLObject.ObjectData data = new LLObject.ObjectData();
                 data.State = block.State;
                 data.Material = (LLObject.MaterialType)block.Material;
-                data.PathCurve = block.PathCurve;
-                data.ProfileCurve = block.ProfileCurve;
+                data.PathCurve = (LLObject.PathCurve)block.PathCurve;
+                data.ProfileCurve = (LLObject.ProfileCurve)block.ProfileCurve;
                 data.PathBegin = LLObject.PathBeginFloat(block.PathBegin);
                 data.PathEnd = LLObject.PathEndFloat(block.PathEnd);
                 data.PathScaleX = LLObject.PathScaleFloat(block.PathScaleX);
@@ -1540,20 +1524,20 @@ namespace libsecondlife
                     #region Avatar
                     case PCode.Avatar:
                         // Update some internals if this is our avatar
-                        if (block.FullID == Client.Network.AgentID)
+                        if (block.FullID == Client.Self.AgentID)
                         {
                             #region Update Client.Self
                             
                             // We need the local ID to recognize terse updates for our agent
-                            Client.Self.LocalID = block.ID;
+                            Client.Self.localID = block.ID;
                             
                             // Packed parameters
-                            Client.Self.CollisionPlane = collisionPlane;
-                            Client.Self.Position = position;
-                            Client.Self.Velocity = velocity;
-                            Client.Self.Acceleration = acceleration;
-                            Client.Self.Rotation = rotation;
-                            Client.Self.AngularVelocity = angularVelocity;
+                            Client.Self.collisionPlane = collisionPlane;
+                            Client.Self.relativePosition = position;
+                            Client.Self.velocity = velocity;
+                            Client.Self.acceleration = acceleration;
+                            Client.Self.relativeRotation = rotation;
+                            Client.Self.angularVelocity = angularVelocity;
 
                             #endregion
                         }
@@ -1668,7 +1652,7 @@ namespace libsecondlife
                     uint localid = Helpers.BytesToUIntBig(block.Data, 0);
 
                     // Check if we are interested in this update
-                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS && localid != Client.Self.LocalID && OnObjectUpdated == null)
+                    if (!Client.Settings.ALWAYS_DECODE_OBJECTS && localid != Client.Self.localID && OnObjectUpdated == null)
                         continue;
 
                     #region Decode update data
@@ -1727,14 +1711,14 @@ namespace libsecondlife
                         (LLObject)GetPrimitive(simulator, update.LocalID, null);
 
                     #region Update Client.Self
-                    if (update.LocalID == Client.Self.LocalID)
+                    if (update.LocalID == Client.Self.localID)
                     {
-                        Client.Self.CollisionPlane = update.CollisionPlane;
-                        Client.Self.Position = update.Position;
-                        Client.Self.Velocity = update.Velocity;
-                        Client.Self.Acceleration = update.Acceleration;
-                        Client.Self.Rotation = update.Rotation;
-                        Client.Self.AngularVelocity = update.AngularVelocity;
+                        Client.Self.collisionPlane = update.CollisionPlane;
+                        Client.Self.relativePosition = update.Position;
+                        Client.Self.velocity = update.Velocity;
+                        Client.Self.acceleration = update.Acceleration;
+                        Client.Self.relativeRotation = update.Rotation;
+                        Client.Self.angularVelocity = update.AngularVelocity;
                     }
                     #endregion Update Client.Self
 
@@ -1980,12 +1964,12 @@ namespace libsecondlife
                                 // Parse the name values
                                 if (text.Length > 0)
                                 {
-                                    string[] lines = text.Split(new char[] { '\n' });
+                                    string[] lines = text.Split('\n');
                                     prim.NameValues = new NameValue[lines.Length];
 
                                     for (int j = 0; j < lines.Length; j++)
                                     {
-                                        if (lines[j].Length > 0)
+                                        if (!String.IsNullOrEmpty(lines[j]))
                                         {
                                             NameValue nv = new NameValue(lines[j]);
                                             prim.NameValues[j] = nv;
@@ -1994,7 +1978,7 @@ namespace libsecondlife
                                 }
                             }
 
-                            prim.Data.PathCurve = (uint)block.Data[i++];
+                            prim.Data.PathCurve = (LLObject.PathCurve)block.Data[i++];
                             ushort pathBegin = Helpers.BytesToUInt16(block.Data, i); i += 2;
                             prim.Data.PathBegin = LLObject.PathBeginFloat(pathBegin);
                             ushort pathEnd = Helpers.BytesToUInt16(block.Data, i); i += 2;
@@ -2011,7 +1995,7 @@ namespace libsecondlife
                             prim.Data.PathRevolutions = LLObject.PathRevolutionsFloat(block.Data[i++]);
                             prim.Data.PathSkew = LLObject.PathSkewFloat((sbyte)block.Data[i++]);
 
-                            prim.Data.ProfileCurve = (uint)block.Data[i++];
+                            prim.Data.ProfileCurve = (LLObject.ProfileCurve)block.Data[i++];
                             ushort profileBegin = Helpers.BytesToUInt16(block.Data, i); i += 2;
                             prim.Data.ProfileBegin = LLObject.ProfileBeginFloat(profileBegin);
                             ushort profileEnd = Helpers.BytesToUInt16(block.Data, i); i += 2;
@@ -2022,16 +2006,15 @@ namespace libsecondlife
                             LLUUID test = new LLUUID("73818c3a-acc3-30b8-5060-0e6cf693cddf");
 
                             // TextureEntry
-                            int textureEntryLength = (int)(block.Data[i++] + (block.Data[i++] << 8) +
-                                (block.Data[i++] << 16) + (block.Data[i++] << 24));
+                            int textureEntryLength = (int)Helpers.BytesToUIntBig(block.Data, i);
+                            i += 4;
                             prim.Textures = new LLObject.TextureEntry(block.Data, i, textureEntryLength);
                             i += textureEntryLength;
 
                             // Texture animation
                             if ((flags & CompressedFlags.TextureAnimation) != 0)
                             {
-                                //int textureAnimLength = (int)(block.Data[i++] + (block.Data[i++] << 8) +
-                                //    (block.Data[i++] << 16) + (block.Data[i++] << 24));
+                                //int textureAnimLength = (int)Helpers.BytesToUIntBig(block.Data, i);
                                 i += 4;
                                 prim.TextureAnim = new Primitive.TextureAnimation(block.Data, i);
                             }
@@ -2131,24 +2114,21 @@ namespace libsecondlife
                 props.AggregatePerms = objectData.AggregatePerms;
                 props.AggregatePermTextures = objectData.AggregatePermTextures;
                 props.AggregatePermTexturesOwner = objectData.AggregatePermTexturesOwner;
-                props.BaseMask = objectData.BaseMask;
+                props.Permissions = new Permissions(objectData.BaseMask, objectData.EveryoneMask, objectData.GroupMask,
+                    objectData.NextOwnerMask, objectData.OwnerMask);
                 props.Category = objectData.Category;
                 props.CreationDate = objectData.CreationDate;
                 props.CreatorID = objectData.CreatorID;
                 props.Description = Helpers.FieldToUTF8String(objectData.Description);
-                props.EveryoneMask = objectData.EveryoneMask;
                 props.FolderID = objectData.FolderID;
                 props.FromTaskID = objectData.FromTaskID;
                 props.GroupID = objectData.GroupID;
-                props.GroupMask = objectData.GroupMask;
                 props.InventorySerial = objectData.InventorySerial;
                 props.ItemID = objectData.ItemID;
                 props.LastOwnerID = objectData.LastOwnerID;
                 props.Name = Helpers.FieldToUTF8String(objectData.Name);
-                props.NextOwnerMask = objectData.NextOwnerMask;
                 props.ObjectID = objectData.ObjectID;
                 props.OwnerID = objectData.OwnerID;
-                props.OwnerMask = objectData.OwnerMask;
                 props.OwnershipCost = objectData.OwnershipCost;
                 props.SalePrice = objectData.SalePrice;
                 props.SaleType = objectData.SaleType;
@@ -2159,6 +2139,18 @@ namespace libsecondlife
                 props.TextureIDs = new LLUUID[numTextures];
                 for (int j = 0; j < numTextures; ++j)
                     props.TextureIDs[j] = new LLUUID(objectData.TextureID, j * 16);
+
+                Primitive findPrim = sim.Objects.Find(
+                    delegate(Primitive prim) { return prim.ID == props.ObjectID; });
+
+                if (findPrim != null)
+                {
+                    lock (sim.Objects.Prims)
+                    {
+                        if (sim.Objects.Prims.ContainsKey(findPrim.LocalID))
+                            sim.Objects.Prims[findPrim.LocalID].Properties = props;
+                    }
+                }
 
                 FireOnObjectProperties(sim, props);
             }
@@ -2203,8 +2195,8 @@ namespace libsecondlife
 
             prim.PCode = ObjectManager.PCode.Prim;
             prim.Material = LLObject.MaterialType.Wood;
-            prim.ProfileCurve = 0x01;
-            prim.PathCurve = 0x10;
+            prim.ProfileCurve = LLObject.ProfileCurve.ProfileSquare;
+            prim.PathCurve = LLObject.PathCurve.Line;
             prim.ProfileEnd = 1.0f;
             prim.PathEnd = 1.0f;
             prim.PathRevolutions = 1.0f;
@@ -2214,7 +2206,7 @@ namespace libsecondlife
 
         protected void SetAvatarSittingOn(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
-            if (localid == Client.Self.LocalID) Client.Self.sittingOn = localid;
+            if (av.LocalID == Client.Self.localID) Client.Self.sittingOn = localid;
             av.sittingOn = localid;
                         
 
@@ -2370,14 +2362,15 @@ namespace libsecondlife
         {
             if (Client.Network.Connected)
             {
-                TimeSpan interval = DateTime.Now - Client.Self.lastInterpolation;
+                int interval = Environment.TickCount - Client.Self.lastInterpolation;
+                float seconds = (float)interval / 1000f;
 
                 // Iterate through all of the simulators
                 lock (Client.Network.Simulators)
                 {
                     for (int i = 0; i < Client.Network.Simulators.Count; i++)
                     {
-                        float adjSeconds = (float)interval.TotalSeconds * Client.Network.Simulators[i].Stats.Dilation;
+                        float adjSeconds = seconds * Client.Network.Simulators[i].Stats.Dilation;
 
                         // Iterate through all of this sims avatars
                         lock (Client.Network.Simulators[i].Objects.Avatars)
@@ -2448,7 +2441,7 @@ namespace libsecondlife
                 }
 
                 // Make sure the last interpolated time is always updated
-                Client.Self.lastInterpolation = DateTime.Now;
+                Client.Self.lastInterpolation = Environment.TickCount;
             }
         }
     }

@@ -25,13 +25,13 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using libsecondlife.LLSD;
 using libsecondlife.Packets;
 using CookComputing.XmlRpc;
 
@@ -157,24 +157,27 @@ namespace libsecondlife
                 StartLocation = reply.start_location;
                 AgentAccess = reply.agent_access;
 
-                ArrayList look_at = (ArrayList)LLSD.ParseTerseLLSD(reply.look_at);
+                List<object> look_at = (List<object>)LLSDParser.DeserializeNotation(reply.look_at);
                 LookAt = new LLVector3(
                     (float)(double)look_at[0],
                     (float)(double)look_at[1],
                     (float)(double)look_at[2]);
 
-                Hashtable home = (Hashtable)LLSD.ParseTerseLLSD(reply.home);
-                ArrayList array = (ArrayList)home["position"];
-                HomePosition = new LLVector3(
-                    (float)(double)array[0],
-                    (float)(double)array[1],
-                    (float)(double)array[2]);
+                if (reply.home != null)
+                {
+                    Dictionary<string, object> home = (Dictionary<string, object>)LLSDParser.DeserializeNotation(reply.home);
+                    List<object> array = (List<object>)home["position"];
+                    HomePosition = new LLVector3(
+                        (float)(double)array[0],
+                        (float)(double)array[1],
+                        (float)(double)array[2]);
 
-                array = (ArrayList)home["look_at"];
-                HomeLookAt = new LLVector3(
-                    (float)(double)array[0],
-                    (float)(double)array[1],
-                    (float)(double)array[2]);
+                    array = (List<object>)home["look_at"];
+                    HomeLookAt = new LLVector3(
+                        (float)(double)array[0],
+                        (float)(double)array[1],
+                        (float)(double)array[2]);
+                }
 
                 CircuitCode = (uint)reply.circuit_code;
                 RegionX = (uint)reply.region_x;
@@ -233,9 +236,13 @@ namespace libsecondlife
                     }
                 }
 
-                foreach (KeyValuePair<LLUUID, List<InventoryFolder>> pair in FoldersChildren) {
-                    InventoryFolder parentFolder = Folders[pair.Key];
-                    parentFolder.DescendentCount = pair.Value.Count; // Should we set this here? it's just the folders, not the items!
+                foreach (KeyValuePair<LLUUID, List<InventoryFolder>> pair in FoldersChildren)
+                {
+                    if (Folders.ContainsKey(pair.Key))
+                    {
+                        InventoryFolder parentFolder = Folders[pair.Key];
+                        parentFolder.DescendentCount = pair.Value.Count; // Should we set this here? it's just the folders, not the items!
+                    }
                 }
 
                 // Should we do this or just return an IEnumerable?
@@ -609,6 +616,9 @@ namespace libsecondlife
             {
                 loginSuccess = true;
 
+                // FIXME: No information should be set here, everything can take care of itself
+                // through login reply handlers
+
                 // Remove the quotes around our first name.
                 if (reply.first_name[0] == '"')
                     reply.first_name = reply.first_name.Remove(0, 1);
@@ -619,44 +629,7 @@ namespace libsecondlife
 
                 try
                 {
-                    // Self
-                    Client.Self.ID = reply.agent_id;
-                    Client.Self.firstName = reply.first_name;
-                    Client.Self.lastName = reply.last_name;
-                    Client.Self.StartLocation = reply.start_location;
-                    Client.Self.AgentAccess = reply.agent_access;
-                    ArrayList look_at = (ArrayList)LLSD.ParseTerseLLSD(reply.look_at);
-                    Client.Self.LookAt = new LLVector3(
-                        (float)(double)look_at[0],
-                        (float)(double)look_at[1],
-                        (float)(double)look_at[2]);
-
-                    // Home
-                    if (reply.home != null)
-                    {
-                        Hashtable home = (Hashtable)LLSD.ParseTerseLLSD(reply.home);
-                        ArrayList array = (ArrayList)home["position"];
-                        Client.Self.HomePosition = new LLVector3(
-                            (float)(double)array[0],
-                            (float)(double)array[1],
-                            (float)(double)array[2]);
-
-                        array = (ArrayList)home["look_at"];
-                        Client.Self.HomeLookAt = new LLVector3(
-                            (float)(double)array[0],
-                            (float)(double)array[1],
-                            (float)(double)array[2]);
-                    }
-                    else
-                    {
-                        Client.Self.HomePosition = LLVector3.Zero;
-                        Client.Self.HomeLookAt = LLVector3.Zero;
-                    }
-
                     // Networking
-                    Client.Network.AgentID = reply.agent_id;
-                    Client.Network.SessionID = reply.session_id;
-                    Client.Network.SecureSessionID = reply.secure_session_id;
                     Client.Network.CircuitCode = (uint)reply.circuit_code;
                     regionX = (uint)reply.region_x;
                     regionY = (uint)reply.region_y;
@@ -672,10 +645,6 @@ namespace libsecondlife
 
                 #endregion Critical Information
 
-                // Inventory:
-                if (reply.inventory_root != null && reply.inventory_root.Length > 0 && reply.inventory_root[0].folder_id != null)
-                    Client.Inventory.InitializeRootNode(reply.inventory_root[0].folder_id);
-
                 // Buddies:
                 if (reply.buddy_list != null)
                 {
@@ -687,8 +656,8 @@ namespace libsecondlife
                 }
 
                 // Misc:
-                uint timestamp = (uint)reply.seconds_since_epoch;
-                DateTime time = Helpers.UnixTimeToDateTime(timestamp); // TODO: Do something with this?
+                //uint timestamp = (uint)reply.seconds_since_epoch;
+                //DateTime time = Helpers.UnixTimeToDateTime(timestamp); // TODO: Do something with this?
 
                 // Unhandled:
                 // reply.gestures

@@ -26,8 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Serialization;
 using System.Text;
 using libsecondlife.Packets;
 
@@ -50,6 +48,9 @@ namespace libsecondlife
         public const double DEG_TO_RAD = Math.PI / 180.0d;
         /// <summary>Used for converting radians to degrees</summary>
         public const double RAD_TO_DEG = 180.0d / Math.PI;
+
+        /// <summary>UNIX epoch in DateTime format</summary>
+        public static DateTime Epoch = new DateTime(1970, 1, 1);
 
         /// <summary>
         /// Passed to SecondLife.Log() to identify the severity of a log entry
@@ -152,7 +153,7 @@ namespace libsecondlife
         /// <returns>A 64-bit integer containing the two 32-bit input values</returns>
         public static ulong UIntsToLong(uint a, uint b)
         {
-            return (ulong)(((ulong)a << 32) + (ulong)b);
+            return ((ulong)a << 32) | (ulong)b;
         }
 
         /// <summary>
@@ -243,8 +244,7 @@ namespace libsecondlife
         /// less than four bytes</returns>
         public static uint BytesToUInt(byte[] bytes)
         {
-            if (bytes.Length < 4) return 0;
-            return (uint)(bytes[3] + (bytes[2] << 8) + (bytes[1] << 16) + (bytes[0] << 24));
+            return BytesToUInt(bytes, 0);
         }
 
         /// <summary>
@@ -645,6 +645,29 @@ namespace libsecondlife
         //}
 
         /// <summary>
+        /// Returns the string between and exclusive of two search characters
+        /// </summary>
+        /// <param name="src">Source string</param>
+        /// <param name="start">Beginning and exclusive of the substring</param>
+        /// <param name="end">End and exclusive of the substring</param>
+        /// <returns>Substring between the start and end characters</returns>
+        public static string StringBetween(string src, char start, char end)
+        {
+            string ret = String.Empty;
+            int idxStart = src.IndexOf(start);
+            if (idxStart != -1)
+            {
+                ++idxStart;
+                int idxEnd = src.IndexOf(end, idxStart);
+                if (idxEnd != -1)
+                {
+                    ret = src.Substring(idxStart, idxEnd - idxStart);
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
         /// Convert a string to a UTF8 encoded byte array
         /// </summary>
         /// <param name="str">The string to convert</param>
@@ -674,8 +697,7 @@ namespace libsecondlife
         /// the given timestamp</returns>
         public static DateTime UnixTimeToDateTime(uint timestamp)
         {
-            // Make a DateTime equivalent to the UNIX Epoch
-            System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0);
+            System.DateTime dateTime = Epoch;
 
             // Add the number of seconds in our UNIX timestamp
             dateTime = dateTime.AddSeconds(timestamp);
@@ -949,34 +971,6 @@ namespace libsecondlife
             }
 
             return "$1$" + digest.ToString();
-        }
-
-        public static void PacketListToXml(List<Packet> packets, XmlWriter xmlWriter)
-        {
-            //XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-            //ns.Add("", "");
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Packet>));
-            serializer.Serialize(xmlWriter, packets);
-        }
-
-        public static void PrimListToXml(List<Primitive> list, XmlWriter xmlWriter)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Primitive>));
-            serializer.Serialize(xmlWriter, list);
-        }
-
-        public static List<Primitive> PrimListFromXml(XmlReader reader)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Primitive>));
-            object list = serializer.Deserialize(reader);
-            return (List<Primitive>)list;
-        }
-
-        public static List<Packet> PacketListFromXml(XmlReader reader)
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(List<Packet>));
-            object list = serializer.Deserialize(reader);
-            return (List<Packet>)list;
         }
 
         /// <summary>
