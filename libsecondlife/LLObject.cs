@@ -156,7 +156,6 @@ namespace libsecondlife
         /// <summary>
         /// 
         /// </summary>
-        [Serializable]
         public struct ObjectData
         {
             /// <summary></summary>

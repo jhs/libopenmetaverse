@@ -25,7 +25,7 @@
  */
 
 using System;
-using System.Timers;
+using System.Threading;
 using libsecondlife;
 using libsecondlife.Packets;
 
@@ -380,26 +380,23 @@ namespace libsecondlife
             /// AgentUpdate packets are sent to the current simulator. Setting
             /// this to a non-zero value will also enable the packet sending if
             /// it was previously off, and setting it to zero will disable</summary>
-            public double UpdateInterval
+            public int UpdateInterval
             {
                 get
                 {
-                    if (updateTimer.Enabled)
-                        return updateTimer.Interval;
-                    else
-                        return 0d;
+                    return updateInterval;
                 }
                 set
                 {
-                    if (value != 0d)
+                    if (value > 0)
                     {
-                        updateTimer.Interval = value;
-                        updateTimer.Start();
+                        updateTimer.Change(value, value);
+                        updateInterval = value;
                     }
                     else
                     {
-                        updateTimer.Stop();
-                        updateTimer.Interval = 0d;
+                        updateTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                        updateInterval = 0;
                     }
                 }
             }
@@ -407,8 +404,7 @@ namespace libsecondlife
             /// the current simulator</summary>
             public bool UpdateEnabled
             {
-                get { return updateTimer.Enabled; }
-                set { updateTimer.Enabled = value; }
+                get { return (updateInterval != 0); }
             }
 
             #endregion Properties
@@ -442,13 +438,14 @@ namespace libsecondlife
             private float LastFar;
             #endregion Change tracking
 
-            private bool alwaysRun = false;
+            private bool alwaysRun;
             private SecondLife Client;
             private uint agentControls;
-            private int duplicateCount = 0;
+            private int duplicateCount;
             private AgentState lastState;
             /// <summary>Timer for sending AgentUpdate packets</summary>
             private Timer updateTimer;
+            private int updateInterval;
 
             /// <summary>Default constructor</summary>
             public AgentMovement(SecondLife client)
@@ -456,9 +453,9 @@ namespace libsecondlife
                 Client = client;
                 Camera = new AgentCamera();
 
-                updateTimer = new Timer(Settings.DEFAULT_AGENT_UPDATE_INTERVAL);
-                updateTimer.Elapsed += new ElapsedEventHandler(UpdateTimer_Elapsed);
-                updateTimer.Start();
+                updateInterval = Settings.DEFAULT_AGENT_UPDATE_INTERVAL;
+                updateTimer = new Timer(new TimerCallback(UpdateTimer_Elapsed), null, Settings.DEFAULT_AGENT_UPDATE_INTERVAL,
+                    Settings.DEFAULT_AGENT_UPDATE_INTERVAL);
             }
 
             /// <summary>
@@ -688,7 +685,7 @@ namespace libsecondlife
                 else agentControls &= ~((uint)flag);
             }
 
-            private void UpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
+            private void UpdateTimer_Elapsed(object obj)
             {
                 if (Client.Network.Connected && Client.Settings.SEND_AGENT_UPDATES)
                 {

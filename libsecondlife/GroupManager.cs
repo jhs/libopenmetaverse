@@ -1283,7 +1283,7 @@ namespace libsecondlife
         {
             GroupAccountTransactionsReplyPacket reply = (GroupAccountTransactionsReplyPacket)packet;
 
-            Client.Log("Got a GroupAccountTransactionsReply packet, implement this callback!" + Environment.NewLine +
+            Client.Log("Got a GroupAccountTransactionsReply packet, implement this callback!\n" +
                 reply.ToString(), Helpers.LogLevel.Error);
         }
 

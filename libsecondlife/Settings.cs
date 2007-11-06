@@ -71,7 +71,7 @@ namespace libsecondlife
         public int RESEND_TIMEOUT = 4000;
         /// <summary>Milliseconds without receiving a packet before the 
         /// connection to a simulator is assumed lost</summary>
-        public int SIMULATOR_TIMEOUT = 15 * 1000;
+        public int SIMULATOR_TIMEOUT = 30 * 1000;
         /// <summary>Milliseconds to wait for a simulator info request through
         /// the grid interface</summary>
         public int MAP_REQUEST_TIMEOUT = 5 * 1000;

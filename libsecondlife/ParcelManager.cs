@@ -25,8 +25,8 @@
  */
 
 using System;
-using System.Timers;
 using System.Collections.Generic;
+using System.Threading;
 using libsecondlife.Packets;
 
 namespace libsecondlife

@@ -33,7 +33,6 @@ namespace libsecondlife
     /// A 128-bit Universally Unique Identifier, used throughout the Second
     /// Life networking protocol
     /// </summary>
-    [Serializable]
     public struct LLUUID : IComparable
     {
         /// <summary>The System.Guid object this struct wraps around</summary>
@@ -350,7 +349,6 @@ namespace libsecondlife
     /// <summary>
     /// A three-dimensional vector with floating-point values
     /// </summary>
-    [Serializable]
 	public struct LLVector3
 	{
         /// <summary>X value</summary>
@@ -596,7 +594,7 @@ namespace libsecondlife
         {
             IFormatProvider formatProvider = Helpers.EnUsCulture;
             char[] splitChar = { ',', ' ' };
-            string[] split = val.Replace("<", String.Empty).Replace(">", String.Empty).Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+            string[] split = val.Replace("<", String.Empty).Replace(">", String.Empty).Split(splitChar);
             return new LLVector3(float.Parse( split[0].Trim(), formatProvider ), float.Parse(split[1].Trim(), formatProvider), float.Parse(split[2].Trim(), formatProvider));
         }
 
@@ -746,7 +744,6 @@ namespace libsecondlife
     /// <summary>
     /// A double-precision three-dimensional vector
     /// </summary>
-    [Serializable]
 	public struct LLVector3d
 	{
         /// <summary>X value</summary>
@@ -931,7 +928,6 @@ namespace libsecondlife
     /// <summary>
     /// A four-dimensional vector
     /// </summary>
-    [Serializable]
 	public struct LLVector4
 	{
         /// <summary></summary>
@@ -1051,7 +1047,6 @@ namespace libsecondlife
     /// <summary>
     /// An 8-bit color structure including an alpha channel
     /// </summary>
-    [Serializable]
     public struct LLColor
     {
         /// <summary>Red</summary>
@@ -1213,7 +1208,6 @@ namespace libsecondlife
     /// <summary>
     /// A quaternion, used for rotations
     /// </summary>
-    [Serializable]
 	public struct LLQuaternion
 	{
         /// <summary>X value</summary>
@@ -1554,7 +1548,9 @@ namespace libsecondlife
         public readonly static LLQuaternion Identity = new LLQuaternion(0f, 0f, 0f, 1f);
 	}
 
-    [Serializable]
+    /// <summary>
+    /// 
+    /// </summary>
     public struct LLMatrix3
     {
         public float M11, M12, M13;

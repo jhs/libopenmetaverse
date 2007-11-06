@@ -25,7 +25,6 @@
  */
 
 using System;
-using System.Timers;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
@@ -206,7 +205,7 @@ namespace libsecondlife
         internal BlockingQueue PacketInbox = new BlockingQueue(Settings.PACKET_INBOX_SIZE);
 
         private SecondLife Client;
-        private System.Timers.Timer DisconnectTimer;
+        private Timer DisconnectTimer;
         private bool connected = false;
 
         /// <summary>
@@ -232,8 +231,7 @@ namespace libsecondlife
 			RegisterCallback(PacketType.SimStats, new PacketCallback(SimStatsHandler));
 			
             // The proper timeout for this will get set again at Login
-            DisconnectTimer = new System.Timers.Timer();
-            DisconnectTimer.Elapsed += new ElapsedEventHandler(DisconnectTimer_Elapsed);
+            DisconnectTimer = new Timer(new TimerCallback(DisconnectTimer_Elapsed), null, Timeout.Infinite, Timeout.Infinite);
 
             // GLOBAL SETTING: Don't force Expect-100: Continue headers on HTTP POST calls
             ServicePointManager.Expect100Continue = false;
@@ -400,7 +398,7 @@ namespace libsecondlife
                 if (simulator.Connect(setDefault))
                 {
                     // Start a timer that checks if we've been disconnected
-                    DisconnectTimer.Start();
+                    DisconnectTimer.Change(Client.Settings.SIMULATOR_TIMEOUT, Client.Settings.SIMULATOR_TIMEOUT);
 
                     if (setDefault) SetCurrentSim(simulator, seedcaps);
 
@@ -477,7 +475,7 @@ namespace libsecondlife
         public void RequestLogout()
         {
             // No need to run the disconnect timer any more
-            DisconnectTimer.Stop();
+            DisconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
             // This will catch a Logout when the client is not logged in
             if (CurrentSim == null || !connected)
@@ -737,13 +735,13 @@ namespace libsecondlife
 
         #region Timers
 
-        private void DisconnectTimer_Elapsed(object sender, ElapsedEventArgs ev)
+        private void DisconnectTimer_Elapsed(object obj)
         {
             if (connected)
             {
                 if (CurrentSim == null)
                 {
-                    DisconnectTimer.Stop();
+                    DisconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     connected = false;
                     return;
                 }
@@ -754,7 +752,7 @@ namespace libsecondlife
                     Client.Log("Network timeout for the current simulator (" +
                         CurrentSim.ToString() + "), logging out", Helpers.LogLevel.Warning);
 
-                    DisconnectTimer.Stop();
+                    DisconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     connected = false;
 
                     // Shutdown the network layer

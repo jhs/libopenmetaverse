@@ -49,6 +49,12 @@ namespace libsecondlife
         /// <summary>Used for converting radians to degrees</summary>
         public const double RAD_TO_DEG = 180.0d / Math.PI;
 
+#if PocketPC
+        public static string NewLine = "\r\n";
+#else
+        public static string NewLine = Environment.NewLine;
+#endif
+
         /// <summary>UNIX epoch in DateTime format</summary>
         public static DateTime Epoch = new DateTime(1970, 1, 1);
 
@@ -332,13 +338,15 @@ namespace libsecondlife
         {
             string s = string.Format("{0:.00}", val);
 
+            // FIXME: Confirm that the .Remove() statements here work correctly
+
             // Trim trailing zeroes
             while (s[s.Length - 1] == '0')
-                s = s.Remove(s.Length - 1);
+                s = s.Remove(0, s.Length - 1);
 
             // Remove superfluous decimal places after the trim
             if (s[s.Length - 1] == '.')
-                s = s.Remove(s.Length - 1);
+                s = s.Remove(0, s.Length - 1);
             // Remove leading zeroes after a negative sign
             else if (s[0] == '-' && s[1] == '0')
                 s = s.Remove(1, 1);
@@ -475,7 +483,7 @@ namespace libsecondlife
             if (bytes.Length > 0 && bytes[bytes.Length - 1] == 0x00)
                 return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1);
             else
-                return UTF8Encoding.UTF8.GetString(bytes);
+                return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
 
         /// <summary>
@@ -528,14 +536,14 @@ namespace libsecondlife
                 if (bytes[bytes.Length - 1] == 0x00)
                     output.Append(UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1));
                 else
-                    output.Append(UTF8Encoding.UTF8.GetString(bytes));
+                    output.Append(UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length));
             }
             else
             {
                 for (int i = 0; i < bytes.Length; i += 16)
                 {
                     if (i != 0)
-                        output.Append(Environment.NewLine);
+                        output.Append('\n');
                     if (fieldName.Length > 0)
                     {
                         output.Append(fieldName);
@@ -576,7 +584,7 @@ namespace libsecondlife
             for (int i = 0; i < bytes.Length; i += 16)
             {
                 if (i != 0)
-                    output.Append(Environment.NewLine);
+                    output.Append('\n');
 
                 if (fieldName.Length > 0)
                 {
@@ -697,12 +705,37 @@ namespace libsecondlife
         /// the given timestamp</returns>
         public static DateTime UnixTimeToDateTime(uint timestamp)
         {
+#if PocketPC
             System.DateTime dateTime = Epoch;
 
             // Add the number of seconds in our UNIX timestamp
             dateTime = dateTime.AddSeconds(timestamp);
 
             return dateTime;
+#else
+            return DateTime.FromBinary(timestamp);
+#endif
+        }
+
+        /// <summary>
+        /// Convert a UNIX timestamp to a native DateTime object
+        /// </summary>
+        /// <param name="timestamp">A signed integer representing a UNIX
+        /// timestamp</param>
+        /// <returns>A DateTime object containing the same time specified in
+        /// the given timestamp</returns>
+        public static DateTime UnixTimeToDateTime(int timestamp)
+        {
+#if PocketPC
+            System.DateTime dateTime = Epoch;
+
+            // Add the number of seconds in our UNIX timestamp
+            dateTime = dateTime.AddSeconds(timestamp);
+
+            return dateTime;
+#else
+            return DateTime.FromBinary(timestamp);
+#endif
         }
 
         /// <summary>
@@ -792,9 +825,9 @@ namespace libsecondlife
             }
             catch (Exception e)
             {
-                Console.WriteLine("Zerodecoding error: " + Environment.NewLine +
-                    "i=" + i + "srclen=" + srclen + ", bodylen=" + bodylen + ", zerolen=" + zerolen + Environment.NewLine +
-                    FieldToHexString(src, "src") + Environment.NewLine + 
+                Console.WriteLine("Zerodecoding error: " + Helpers.NewLine +
+                    "i=" + i + "srclen=" + srclen + ", bodylen=" + bodylen + ", zerolen=" + zerolen + Helpers.NewLine +
+                    FieldToHexString(src, "src") + Helpers.NewLine + 
                     e.ToString());
             }
 
@@ -967,7 +1000,7 @@ namespace libsecondlife
             // Convert the hash to a hex string
             foreach (byte b in hash)
             {
-                digest.AppendFormat("{0:x2}", b);
+                digest.AppendFormat(Helpers.EnUsCulture, "{0:x2}", b);
             }
 
             return "$1$" + digest.ToString();
@@ -1016,6 +1049,123 @@ namespace libsecondlife
             }
 
             return null;
+        }
+
+        public static bool TryParse(string s, out DateTime result)
+        {
+#if PocketPC
+            try { result = DateTime.Parse(s); return true; }
+            catch (FormatException) { result = Helpers.Epoch; return false; }
+#else
+            return DateTime.TryParse(s, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out int result)
+        {
+#if PocketPC
+            try { result = Int32.Parse(s); return true; }
+            catch (FormatException) { result = 0; return false; }
+#else
+            return Int32.TryParse(s, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out uint result)
+        {
+#if PocketPC
+            try { result = UInt32.Parse(s); return true; }
+            catch (FormatException) { result = 0; return false; }
+#else
+            return UInt32.TryParse(s, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out ulong result)
+        {
+#if PocketPC
+            try { result = UInt64.Parse(s); return true; }
+            catch (FormatException) { result = 0; return false; }
+#else
+            return UInt64.TryParse(s, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out float result)
+        {
+#if PocketPC
+            try { result = Single.Parse(s, System.Globalization.NumberStyles.Float, Helpers.EnUsCulture.NumberFormat); return true; }
+            catch (FormatException) { result = 0f; return false; }
+#else
+            return Single.TryParse(s, System.Globalization.NumberStyles.Float, Helpers.EnUsCulture.NumberFormat, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out double result)
+        {
+#if PocketPC
+            try { result = Double.Parse(s, System.Globalization.NumberStyles.Float, Helpers.EnUsCulture.NumberFormat); return true; }
+            catch (FormatException) { result = 0d; return false; }
+#else
+            return Double.TryParse(s, System.Globalization.NumberStyles.Float, Helpers.EnUsCulture.NumberFormat, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out System.Net.IPAddress result)
+        {
+#if PocketPC
+            try { result = System.Net.IPAddress.Parse(s); return true; }
+            catch (FormatException) { result = System.Net.IPAddress.Loopback; return false; }
+#else
+            return System.Net.IPAddress.TryParse(s, out result);
+#endif
+        }
+
+        public static bool TryParse(string s, out LLUUID result)
+        {
+            return LLUUID.TryParse(s, out result);
+        }
+
+        public static bool TryParse(string s, out LLVector3 result)
+        {
+            return LLVector3.TryParse(s, out result);
+        }
+
+        public static bool TryParseHex(string s, out uint result)
+        {
+#if PocketPC
+            try { result = UInt32.Parse(s, System.Globalization.NumberStyles.HexNumber, Helpers.EnUsCulture.NumberFormat); return true; }
+            catch (FormatException) { result = 0; return false; }
+#else
+            return UInt32.TryParse(s, System.Globalization.NumberStyles.HexNumber, Helpers.EnUsCulture.NumberFormat, out result);
+#endif
+        }
+
+        public static bool StringContains(string haystack, string needle)
+        {
+#if PocketPC
+            return (haystack.IndexOf(needle) != -1);
+#else
+            return haystack.Contains(needle);
+#endif
+        }
+
+        public static bool StringSplitAt(string input, string separator, out string before, out string after)
+        {
+            int index = input.IndexOf(separator);
+
+            if (index != -1)
+            {
+                before = input.Substring(0, index);
+                after = input.Substring(index);
+                return true;
+            }
+            else
+            {
+                before = String.Empty;
+                after = String.Empty;
+                return false;
+            }
         }
     }
 }

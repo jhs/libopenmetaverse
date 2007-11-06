@@ -148,9 +148,7 @@ namespace libsecondlife
             }
             catch (Exception e)
             {
-                SecondLife.LogStatic(String.Format("CapsEventQueue.MakeRequest(): {0} (Source: {1})", e.Message, e.Source),
-                    Helpers.LogLevel.Warning);
-
+                SecondLife.LogStatic("CapsEventQueue.MakeRequest(): " + e.ToString(), Helpers.LogLevel.Warning);
                 Abort(false, null);
             }
         }
@@ -243,8 +241,10 @@ namespace libsecondlife
 
             if (exception != null)
             {
+                string message = exception.Message.ToLower();
+
                 // Check what kind of exception happened
-                if (exception.Message.Contains("404") || exception.Message.Contains("410"))
+                if (Helpers.StringContains(message, "404") || Helpers.StringContains(message, "410"))
                 {
                     Simulator.Client.Log("Closing event queue for " + Simulator.ToString() + " due to missing caps URI",
                         Helpers.LogLevel.Info);
@@ -252,7 +252,7 @@ namespace libsecondlife
                     _Running = false;
                     _Dead = true;
                 }
-                else if (!exception.Message.ToLower().Contains("aborted") && !exception.Message.Contains("502"))
+                else if (!Helpers.StringContains(message, "aborted") && !Helpers.StringContains(message, "502"))
                 {
                     Simulator.Client.Log(String.Format("Unrecognized caps exception for {0}: {1}", Simulator, exception.Message),
                         Helpers.LogLevel.Warning);
@@ -313,7 +313,7 @@ namespace libsecondlife
                     Dictionary<string, object> body = (Dictionary<string, object>)evt["body"];
 
                     //Simulator.Client.DebugLog(
-                    //    String.Format("[{0}] Event {1}: {2}{3}", Simulator, msg, Environment.NewLine, LLSD.LLSDDump(body, 0)));
+                    //    String.Format("[{0}] Event {1}: {2}{3}", Simulator, msg, Helpers.NewLine, LLSD.LLSDDump(body, 0)));
 
                     if (Simulator.Client.Settings.SYNC_PACKETCALLBACKS)
                         Simulator.Client.Network.CapsEvents.RaiseEvent(msg, body, this);

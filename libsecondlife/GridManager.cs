@@ -93,13 +93,13 @@ namespace libsecondlife
         public override string ToString()
         {
             StringBuilder output = new StringBuilder("GridRegion: ");
-            output.AppendLine(Name);
-            output.AppendLine("RegionHandle: " + RegionHandle);
-            output.AppendLine(String.Format("X: {0} Y: {1}", X, Y));
-            output.AppendLine("MapImageID: " + MapImageID.ToStringHyphenated());
-            output.AppendLine("Access: " + Access);
-            output.AppendLine("RegionFlags: " + RegionFlags);
-            output.AppendLine("WaterHeight: " + WaterHeight);
+            output.Append(Name); output.Append(Helpers.NewLine);
+            output.Append("RegionHandle: " + RegionHandle); output.Append(Helpers.NewLine);
+            output.Append(String.Format("X: {0} Y: {1}", X, Y)); output.Append(Helpers.NewLine);
+            output.Append("MapImageID: " + MapImageID.ToStringHyphenated()); output.Append(Helpers.NewLine);
+            output.Append("Access: " + Access); output.Append(Helpers.NewLine);
+            output.Append("RegionFlags: " + RegionFlags); output.Append(Helpers.NewLine);
+            output.Append("WaterHeight: " + WaterHeight); output.Append(Helpers.NewLine);
             output.Append("Agents: " + Agents);
 
             return output.ToString();

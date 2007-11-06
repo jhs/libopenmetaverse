@@ -303,7 +303,7 @@ namespace libsecondlife.LLSD
                     if (reader.Read())
                     {
                         int value = 0;
-                        Int32.TryParse(reader.ReadString().Trim(), out value);
+                        Helpers.TryParse(reader.ReadString().Trim(), out value);
                         ret = value;
                         break;
                     }
@@ -325,7 +325,7 @@ namespace libsecondlife.LLSD
                         if (str == "nan")
                             value = Double.NaN;
                         else
-                            Double.TryParse(str, out value);
+                            Helpers.TryParse(str, out value);
 
                         ret = value;
                         break;
@@ -360,7 +360,7 @@ namespace libsecondlife.LLSD
                     if (reader.Read())
                     {
                         DateTime value = Helpers.Epoch;
-                        DateTime.TryParse(reader.ReadString().Trim(), out value);
+                        Helpers.TryParse(reader.ReadString().Trim(), out value);
                         ret = value;
                         break;
                     }
@@ -640,7 +640,7 @@ namespace libsecondlife.LLSD
             if (LastXmlErrors == String.Empty)
                 LastXmlErrors = error;
             else
-                LastXmlErrors += Environment.NewLine + error;
+                LastXmlErrors += Helpers.NewLine + error;
         }
     }
 }

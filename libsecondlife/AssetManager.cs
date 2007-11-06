@@ -156,10 +156,6 @@ namespace libsecondlife
     /// </summary>
     public class Transfer
     {
-        public delegate void Timeout(Transfer transfer);
-
-        public event Timeout OnTimeout;
-
         public LLUUID ID;
         public int Size;
         public byte[] AssetData = new byte[0];
@@ -167,21 +163,16 @@ namespace libsecondlife
         public bool Success;
         public AssetType AssetType;
 
-        internal System.Timers.Timer TransferTimer = new System.Timers.Timer(Settings.TRANSFER_TIMEOUT);
+        internal int transferStart;
+
+        /// <summary>Number of milliseconds passed since this transfer was
+        /// initialized</summary>
+        public int TransferTime { get { return Environment.TickCount - transferStart; } }
 
         public Transfer()
         {
-            TransferTimer.AutoReset = false;
-            TransferTimer.Elapsed += new System.Timers.ElapsedEventHandler(TransferTimer_Elapsed);
-        }
-
-        private void TransferTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            if (OnTimeout != null)
-            {
-                try { OnTimeout(this); }
-                catch (Exception ex) { SecondLife.LogStatic(ex.ToString(), Helpers.LogLevel.Error); }
-            }
+            AssetData = new byte[0];
+            transferStart = Environment.TickCount;
         }
     }
 
@@ -532,8 +523,6 @@ namespace libsecondlife
             upload.AssetID = assetID;
             upload.Size = data.Length;
             upload.XferID = 0;
-            upload.TransferTimer.Interval = 10 * 1000; // 10 second timeout for no upload packet confirmation
-            upload.OnTimeout += new Transfer.Timeout(Transfer_OnTimeout); 
 
             // Build and send the upload packet
             AssetUploadRequestPacket request = new AssetUploadRequestPacket();
@@ -687,41 +676,6 @@ namespace libsecondlife
 
         #region Transfer Callbacks
 
-        private void Transfer_OnTimeout(Transfer transfer)
-        {
-            if (transfer is AssetUpload)
-            {
-                AssetUpload upload = (AssetUpload)transfer;
-                LLUUID transferID = new LLUUID(upload.XferID);
-
-                if (Transfers.ContainsKey(transferID))
-                {
-                    Client.Log(String.Format(
-                        "Timed out waiting for an ACK during asset upload {0}, rolling back to packet number {1}",
-                        upload.AssetID.ToStringHyphenated(), (upload.PacketNum - 1)), Helpers.LogLevel.Info);
-
-                    // Resend the last block of data and reset the timeout timer
-                    upload.PacketNum--;
-                    upload.Transferred -= 1000;
-                    upload.TransferTimer.Start();
-
-                    SendNextUploadPacket(upload);
-                }
-                else
-                {
-                    Client.Log(String.Format("Upload {0} (Type: {1}, Success: {2}) timed out but is not being tracked",
-                        upload.ID.ToStringHyphenated(), upload.AssetType, upload.Success), Helpers.LogLevel.Warning);
-                }
-            }
-            else
-            {
-                if (Transfers.ContainsKey(transfer.ID))
-                {
-                    // TODO: Implement something here when timeouts for downloads are turned on
-                }
-            }
-        }
-
         private void TransferInfoHandler(Packet packet, Simulator simulator)
         {
             if (OnAssetReceived != null)
@@ -806,10 +760,6 @@ namespace libsecondlife
             if (Transfers.TryGetValue(asset.TransferData.TransferID, out transfer))
             {
                 download = (AssetDownload)transfer;
-
-                // Reset the transfer timer
-                download.TransferTimer.Stop();
-                download.TransferTimer.Start();
 
                 if (download.Size == 0)
                 {
@@ -913,10 +863,6 @@ namespace libsecondlife
                 //Client.DebugLog(String.Format("ACK for upload {0} of asset type {1} ({2}/{3})",
                 //    upload.AssetID.ToStringHyphenated(), upload.Type, upload.Transferred, upload.Size));
 
-                // Reset the transfer timer
-                upload.TransferTimer.Stop();
-                upload.TransferTimer.Start();
-
                 if (OnUploadProgress != null)
                 {
                     try { OnUploadProgress(upload); }
@@ -948,9 +894,6 @@ namespace libsecondlife
 
                             if ((upload).AssetID == complete.AssetBlock.UUID)
                             {
-                                // Stop the resend timer for this transfer
-                                upload.TransferTimer.Stop();
-
                                 found = true;
                                 foundTransfer = transfer;
                                 upload.Success = complete.AssetBlock.Success;
@@ -984,10 +927,6 @@ namespace libsecondlife
             if (Transfers.TryGetValue(transferID, out transfer))
             {
                 download = (XferDownload)transfer;
-
-                // Reset the transfer timer
-                download.TransferTimer.Stop();
-                download.TransferTimer.Start();
 
                 // Apply a mask to get rid of the "end of transfer" bit
                 uint packetNum = xfer.XferID.Packet & 0x0FFFFFFF;

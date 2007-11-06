@@ -26,7 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using libsecondlife.Packets;
 
 namespace libsecondlife
@@ -65,6 +65,8 @@ namespace libsecondlife
     /// </summary>
     public class ObjectManager
     {
+        public const float HAVOK_TIMESTEP = 1.0f / 45.0f;
+
         #region CallBack Definitions
         /// <summary>
         /// 
@@ -139,7 +141,6 @@ namespace libsecondlife
         public delegate void AvatarSitChanged(Simulator simulator, Avatar avatar, uint sittingOn, uint oldSeat);
 		
         #endregion
-
 
         #region Object/Prim Enums
 
@@ -361,7 +362,6 @@ namespace libsecondlife
 
         #endregion
 
-
         #region Events
 
         /// <summary>
@@ -435,18 +435,11 @@ namespace libsecondlife
 
         #endregion
 
-
-        private const float HAVOK_TIMESTEP = 1.0f / 45.0f;
-
-
-        /// <summary>
-        /// Reference to the SecondLife client
-        /// </summary>
+        /// <summary>Reference to the SecondLife client</summary>
         protected SecondLife Client;
-
-
-        private System.Timers.Timer InterpolationTimer;
-
+        /// <summary>Does periodic dead reckoning calculation to convert
+        /// velocity and acceleration to new positions for objects</summary>
+        private Timer InterpolationTimer;
 
         /// <summary>
         /// Instantiates a new ObjectManager class. This class should only be accessed
@@ -490,9 +483,8 @@ namespace libsecondlife
 
             // If the callbacks aren't registered there's not point in doing client-side path prediction,
             // so we set it up here
-            InterpolationTimer = new System.Timers.Timer(Settings.INTERPOLATION_INTERVAL);
-            InterpolationTimer.Elapsed += new System.Timers.ElapsedEventHandler(InterpolationTimer_Elapsed);
-            InterpolationTimer.Start();
+            InterpolationTimer = new Timer(new TimerCallback(InterpolationTimer_Elapsed), null, Settings.INTERPOLATION_INTERVAL,
+                Settings.INTERPOLATION_INTERVAL);
         }
 
         #region Action Methods
@@ -2358,7 +2350,7 @@ namespace libsecondlife
 
         #endregion Object Tracking Link
 
-        protected void InterpolationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        protected void InterpolationTimer_Elapsed(object obj)
         {
             if (Client.Network.Connected)
             {

@@ -26,8 +26,6 @@
 
 using System;
 using System.Text;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
@@ -248,16 +246,17 @@ namespace libsecondlife
 
         public void SetPreviousAppearance(bool bake)
         {
-            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartSetPreviousAppearance));
-            appearanceThread.Start(bake);
+            _bake = bake;
+            Thread appearanceThread = new Thread(new ThreadStart(StartSetPreviousAppearance));
+            appearanceThread.Start();
         }
 
-        private void StartSetPreviousAppearance(object _bake)
+        private bool _bake;
+        private void StartSetPreviousAppearance()
         {
-            bool bake = (bool)_bake;
             SendAgentWearablesRequest();
             WearablesRequestEvent.WaitOne();
-            UpdateAppearanceFromWearables(bake);
+            UpdateAppearanceFromWearables(_bake);
         }
 
         private class WearParams
@@ -271,26 +270,32 @@ namespace libsecondlife
                 Bake = bake;
             }
         }
-        
+
         /// <summary>
         /// Replace the current outfit with a list of wearables and set appearance
         /// </summary>
-        /// <param name="iws">List of wearables that define the new outfit</param>
-        public void WearOutfit(List<InventoryBase> ibs, bool bake)
-        {
-            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfit));
-            appearanceThread.Start(new WearParams(ibs,bake));
-        }
-
+        /// <param name="ibs">List of wearables that define the new outfit</param>
         public void WearOutfit(List<InventoryBase> ibs)
         {
             WearOutfit(ibs, true);
         }
-
-        private void StartWearOutfit(object _wp)
+        
+        /// <summary>
+        /// Replace the current outfit with a list of wearables and set appearance
+        /// </summary>
+        /// <param name="ibs">List of wearables that define the new outfit</param>
+        /// <param name="bake">Whether to bake textures for the avatar or not</param>
+        public void WearOutfit(List<InventoryBase> ibs, bool bake)
         {
-            WearParams wp = (WearParams)_wp;
-            List<InventoryBase> ibs = (List<InventoryBase>)wp.Param;
+            _wearParams = new WearParams(ibs, bake);
+            Thread appearanceThread = new Thread(new ThreadStart(StartWearOutfit));
+            appearanceThread.Start();
+        }
+
+        private WearParams _wearParams;
+        private void StartWearOutfit()
+        {
+            List<InventoryBase> ibs = (List<InventoryBase>)_wearParams.Param;
             List<InventoryWearable> wearables = new List<InventoryWearable>();
             List<InventoryBase> attachments = new List<InventoryBase>();
 
@@ -305,20 +310,14 @@ namespace libsecondlife
             SendAgentWearablesRequest();
             WearablesRequestEvent.WaitOne();
             ReplaceOutfitWearables(wearables);
-            UpdateAppearanceFromWearables(wp.Bake);
+            UpdateAppearanceFromWearables(_wearParams.Bake);
             AddAttachments(attachments, true);
         }
 
         /// <summary>
         /// Replace the current outfit with a folder and set appearance
         /// </summary>
-        /// <param name="folder">Folder containing the new outfit</param>
-        public void WearOutfit(LLUUID folder, bool bake)
-        {
-            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
-            appearanceThread.Start(new WearParams(folder,bake));
-        }
-
+        /// <param name="folder">UUID of the inventory folder to wear</param>
         public void WearOutfit(LLUUID folder)
         {
             WearOutfit(folder, true);
@@ -327,31 +326,49 @@ namespace libsecondlife
         /// <summary>
         /// Replace the current outfit with a folder and set appearance
         /// </summary>
-        /// <param name="path">Path of folder containing the new outfit</param>
-        public void WearOutfit(string[] path, bool bake)
-        {
-            Thread appearanceThread = new Thread(new ParameterizedThreadStart(StartWearOutfitFolder));
-            appearanceThread.Start(new WearParams(path,bake));
-        }
-
+        /// <param name="path">Inventory path of the folder to wear</param>
         public void WearOutfit(string[] path)
         {
             WearOutfit(path, true);
         }
 
-        private void StartWearOutfitFolder(object _wp)
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="folder">Folder containing the new outfit</param>
+        /// <param name="bake">Whether to bake the avatar textures or not</param>
+        public void WearOutfit(LLUUID folder, bool bake)
         {
-            WearParams wp = (WearParams)_wp;
+            _wearOutfitParams = new WearParams(folder, bake);
+            Thread appearanceThread = new Thread(new ThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start();
+        }
+
+        /// <summary>
+        /// Replace the current outfit with a folder and set appearance
+        /// </summary>
+        /// <param name="path">Path of folder containing the new outfit</param>
+        /// <param name="bake">Whether to bake the avatar textures or not</param>
+        public void WearOutfit(string[] path, bool bake)
+        {
+            _wearOutfitParams = new WearParams(path, bake);
+            Thread appearanceThread = new Thread(new ThreadStart(StartWearOutfitFolder));
+            appearanceThread.Start();
+        }
+
+        private WearParams _wearOutfitParams;
+        private void StartWearOutfitFolder()
+        {
             SendAgentWearablesRequest(); // request current wearables async
             List<InventoryWearable> wearables;
             List<InventoryBase> attachments;
 
-            if (!GetFolderWearables(wp.Param, out wearables, out attachments)) // get wearables in outfit folder
+            if (!GetFolderWearables(_wearOutfitParams.Param, out wearables, out attachments)) // get wearables in outfit folder
                 return; // TODO: this error condition should be passed back to the client somehow
             
             WearablesRequestEvent.WaitOne(); // wait for current wearables
             ReplaceOutfitWearables(wearables); // replace current wearables with outfit folder
-            UpdateAppearanceFromWearables(wp.Bake);
+            UpdateAppearanceFromWearables(_wearOutfitParams.Bake);
             AddAttachments(attachments, true);
         }
 
@@ -361,7 +378,7 @@ namespace libsecondlife
             wearables = null;
             attachments = null;
 
-            if (_folder is string[])
+            if (_folder.GetType() == typeof(string[]))
             {
                 string[] path = (string[])_folder;
 
@@ -564,17 +581,6 @@ namespace libsecondlife
 
             // Unregister the asset download callback
             Assets.OnAssetReceived -= assetCallback;
-
-            if (Client.Settings.DEBUG)
-            {
-                StringBuilder tex = new StringBuilder();
-
-                for (int i = 0; i < AgentTextures.Length; i++)
-                    if (AgentTextures[i] != LLUUID.Zero)
-                        tex.AppendFormat("{0} = {1}\n", (TextureIndex)i, AgentTextures[i]);
-
-                Client.DebugLog("AgentTextures:" + Environment.NewLine + tex.ToString());
-            }
 
             // Check if anything needs to be rebaked
             if (bake) RequestCachedBakes();

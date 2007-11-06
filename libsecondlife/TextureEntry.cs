@@ -895,12 +895,12 @@ namespace libsecondlife
             {
                 string output = String.Empty;
 
-                output += "Default Face: " + DefaultTexture.ToString() + Environment.NewLine;
+                output += "Default Face: " + DefaultTexture.ToString() + Helpers.NewLine;
 
                 for (int i = 0; i < FaceTextures.Length; i++)
                 {
                     if (FaceTextures[i] != null)
-                        output += "Face " + i + ": " + FaceTextures[i].ToString() + Environment.NewLine;
+                        output += "Face " + i + ": " + FaceTextures[i].ToString() + Helpers.NewLine;
                 }
 
                 return output;

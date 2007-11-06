@@ -754,7 +754,7 @@ namespace libsecondlife
             InventorySearch search;
             search.Folder = baseFolder;
             search.Owner = inventoryOwner;
-            search.Path = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            search.Path = path.Split('/');
             search.Level = 0;
             lock (_Searches) _Searches.Add(search);
 
@@ -871,9 +871,9 @@ namespace libsecondlife
 
         public void MoveItem(LLUUID item, LLUUID folder, string newItemName)
         {
-            lock (Store)
+            lock (_Store)
             {
-                    if (Store.Contains(item))
+                    if (_Store.Contains(item))
                     {
                         InventoryBase inv = _Store[item];
                         inv.ParentUUID = folder;
@@ -897,15 +897,15 @@ namespace libsecondlife
 
         public void MoveItems(Dictionary<LLUUID, LLUUID> itemsNewParents)
         {
-            lock (Store)
+            lock (_Store)
             {
                 foreach (KeyValuePair<LLUUID, LLUUID> entry in itemsNewParents)
                 {
-                    if (Store.Contains(entry.Key))
+                    if (_Store.Contains(entry.Key))
                     {
-                        InventoryBase inv = Store[entry.Key];
+                        InventoryBase inv = _Store[entry.Key];
                         inv.ParentUUID = entry.Value;
-                        Store.UpdateNodeFor(inv);
+                        _Store.UpdateNodeFor(inv);
                     }
                 }
             }
@@ -943,14 +943,14 @@ namespace libsecondlife
             _Client.Network.SendPacket(purge);
 
             // Update our local copy
-            lock (Store)
+            lock (_Store)
             {
-                if (Store.Contains(folder))
+                if (_Store.Contains(folder))
                 {
-                    List<InventoryBase> contents = Store.GetContents(folder);
+                    List<InventoryBase> contents = _Store.GetContents(folder);
                     foreach (InventoryBase obj in contents)
                     {
-                        Store.RemoveNodeFor(obj);
+                        _Store.RemoveNodeFor(obj);
                     }
                 }
             }
@@ -1689,7 +1689,7 @@ namespace libsecondlife
             InventoryItem ret = null;
 
             if (_Store.Contains(ItemID))
-                ret = Store[ItemID] as InventoryItem;
+                ret = _Store[ItemID] as InventoryItem;
 
             if (ret == null)
                 ret = CreateInventoryItem(InvType, ItemID);
@@ -1736,7 +1736,7 @@ namespace libsecondlife
         {
             List<InventoryBase> items = new List<InventoryBase>();
             int lineNum = 0;
-            string[] lines = taskData.Replace("\r\n", "\n").Split(new char[] { '\n' });
+            string[] lines = taskData.Replace("\r\n", "\n").Split('\n');
 
             while (lineNum < lines.Length)
             {
@@ -1867,65 +1867,59 @@ namespace libsecondlife
                                             {
                                                 // Deprecated
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.BaseMask = (PermissionMask)val;
                                             }
                                             else if (key == "base_mask")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.BaseMask = (PermissionMask)val;
                                             }
                                             else if (key == "owner_mask")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.OwnerMask = (PermissionMask)val;
                                             }
                                             else if (key == "group_mask")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.GroupMask = (PermissionMask)val;
                                             }
                                             else if (key == "everyone_mask")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.EveryoneMask = (PermissionMask)val;
                                             }
                                             else if (key == "next_owner_mask")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, System.Globalization.NumberStyles.HexNumber,
-                                                    Helpers.EnUsCulture.NumberFormat, out val))
+                                                if (Helpers.TryParseHex(value, out val))
                                                     perms.NextOwnerMask = (PermissionMask)val;
                                             }
                                             else if (key == "creator_id")
                                             {
-                                                LLUUID.TryParse(value, out creatorID);
+                                                Helpers.TryParse(value, out creatorID);
                                             }
                                             else if (key == "owner_id")
                                             {
-                                                LLUUID.TryParse(value, out ownerID);
+                                                Helpers.TryParse(value, out ownerID);
                                             }
                                             else if (key == "last_owner_id")
                                             {
-                                                LLUUID.TryParse(value, out lastOwnerID);
+                                                Helpers.TryParse(value, out lastOwnerID);
                                             }
                                             else if (key == "group_id")
                                             {
-                                                LLUUID.TryParse(value, out groupID);
+                                                Helpers.TryParse(value, out groupID);
                                             }
                                             else if (key == "group_owned")
                                             {
                                                 uint val;
-                                                if (UInt32.TryParse(value, out val))
+                                                if (Helpers.TryParse(value, out val))
                                                     groupOwned = (val != 0);
                                             }
                                         }
@@ -1955,7 +1949,7 @@ namespace libsecondlife
                                             }
                                             else if (key == "sale_price")
                                             {
-                                                Int32.TryParse(value, out salePrice);
+                                                Helpers.TryParse(value, out salePrice);
                                             }
                                         }
                                     }
@@ -1980,7 +1974,7 @@ namespace libsecondlife
                                 }
                                 else if (key == "flags")
                                 {
-                                    UInt32.TryParse(value, out flags);
+                                    Helpers.TryParse(value, out flags);
                                 }
                                 else if (key == "name")
                                 {
@@ -1993,7 +1987,7 @@ namespace libsecondlife
                                 else if (key == "creation_date")
                                 {
                                     uint timestamp;
-                                    if (UInt32.TryParse(value, out timestamp))
+                                    if (Helpers.TryParse(value, out timestamp))
                                         creationDate = Helpers.UnixTimeToDateTime(timestamp);
                                     else
                                         SecondLife.LogStatic("Failed to parse creation_date " + value, Helpers.LogLevel.Warning);
@@ -2023,7 +2017,7 @@ namespace libsecondlife
                     }
                     else
                     {
-                        SecondLife.LogStatic("Unrecognized token " + key + " in: " + Environment.NewLine + taskData,
+                        SecondLife.LogStatic("Unrecognized token " + key + " in: " + Helpers.NewLine + taskData,
                             Helpers.LogLevel.Error);
                     }
                 }
@@ -2256,7 +2250,7 @@ namespace libsecondlife
                 InventoryItem item = CreateInventoryItem((InventoryType)dataBlock.InvType,dataBlock.ItemID);
                 item.AssetType = (AssetType)dataBlock.Type;
                 item.AssetUUID = dataBlock.AssetID;
-                item.CreationDate = DateTime.FromBinary(dataBlock.CreationDate);
+                item.CreationDate = Helpers.UnixTimeToDateTime(dataBlock.CreationDate);
                 item.CreatorID = dataBlock.CreatorID;
                 item.Description = Helpers.FieldToUTF8String(dataBlock.Description);
                 item.Flags = dataBlock.Flags;
@@ -2356,7 +2350,7 @@ namespace libsecondlife
 
                     item.AssetType = (AssetType)dataBlock.Type;
                     if (dataBlock.AssetID != LLUUID.Zero) item.AssetUUID = dataBlock.AssetID;
-                    item.CreationDate = DateTime.FromBinary(dataBlock.CreationDate);
+                    item.CreationDate = Helpers.UnixTimeToDateTime(dataBlock.CreationDate);
                     item.CreatorID = dataBlock.CreatorID;
                     item.Description = Helpers.FieldToUTF8String(dataBlock.Description);
                     item.Flags = dataBlock.Flags;
@@ -2415,7 +2409,7 @@ namespace libsecondlife
                 InventoryItem item = CreateInventoryItem((InventoryType)dataBlock.InvType,dataBlock.ItemID);
                 item.AssetType = (AssetType)dataBlock.Type;
                 item.AssetUUID = dataBlock.AssetID;
-                item.CreationDate = DateTime.FromBinary(dataBlock.CreationDate);
+                item.CreationDate = Helpers.UnixTimeToDateTime(dataBlock.CreationDate);
                 item.CreatorID = dataBlock.CreatorID;
                 item.Description = Helpers.FieldToUTF8String(dataBlock.Description);
                 item.Flags = dataBlock.Flags;

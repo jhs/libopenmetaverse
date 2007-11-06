@@ -117,7 +117,6 @@ namespace libsecondlife
         /// <summary>
         /// Controls the texture animation of a particular prim
         /// </summary>
-        [Serializable]
         public struct TextureAnimation
         {
             /// <summary></summary>
@@ -191,7 +190,6 @@ namespace libsecondlife
         /// <summary>
         /// Information on the flexible properties of a primitive
         /// </summary>
-        [Serializable]
         public struct FlexibleData
         {
             /// <summary></summary>
@@ -263,7 +261,6 @@ namespace libsecondlife
         /// <summary>
         /// Information on the light properties of a primitive
         /// </summary>
-        [Serializable]
         public struct LightData
         {
             /// <summary></summary>
@@ -318,7 +315,6 @@ namespace libsecondlife
         /// <summary>
         /// Information on the sculpt properties of a sculpted primitive
         /// </summary>
-        [Serializable]
         public struct SculptData
         {
             public LLUUID SculptTexture;

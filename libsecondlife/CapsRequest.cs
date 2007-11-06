@@ -79,7 +79,7 @@ namespace libsecondlife
             {
                 response = LLSDParser.DeserializeXml(state.ResponseData);
             }
-            else if (exception != null && exception.Message.Contains("502"))
+            else if (exception != null && Helpers.StringContains(exception.Message, "502"))
             {
                 // These are normal, retry the request automatically
                 MakeRequest(state.RequestData, "application/xml", 0, null);
